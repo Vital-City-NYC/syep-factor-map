@@ -29,9 +29,12 @@ STATION_RADIUS_M = 140   # see methodology: in every precinct but one (the 14th,
 
 
 def meters(lat1, lon1, lat2, lon2):
-    """Equirectangular distance; accurate to well under 1% at city scale."""
-    k = 111_320.0
-    return math.hypot((lat1 - lat2) * k, (lon1 - lon2) * k * math.cos(math.radians((lat1 + lat2) / 2)))
+    """Great-circle (haversine) distance in meters, mean Earth radius."""
+    R = 6_371_008.8
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp, dl = p2 - p1, math.radians(lon2 - lon1)
+    h = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(h))
 
 
 def load_stations(path=None):
@@ -125,8 +128,16 @@ def place(records, stations, index, precinct_key, category_key, radius=STATION_R
         for g, m in dist.items():
             counts[g][cat] += n * m / tot
 
+    by_cat = defaultdict(int)
+    for (pct, cat), n in at_station.items():
+        by_cat[cat] += int(n)
+    rec_by_cat = defaultdict(int)
+    for r in records:
+        rec_by_cat[r[category_key]] += 1
     report = {
         "records": len(records),
+        "records_by_category": dict(rec_by_cat),
+        "at_station_house_by_category": dict(by_cat),
         "at_station_house": int(sum(at_station.values())),
         "located": int(sum(sum(t.values()) for t in located.values())),
         "unplaced": unplaced,
