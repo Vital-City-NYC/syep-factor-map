@@ -209,6 +209,7 @@ Y = {
     "under25":   _c("B01001", *range(3, 11), *range(27, 35)),
     "under18":   _c("B01001", *range(3, 7), *range(27, 31)),
     "age10_17":  _c("B01001", 5, 6, 29, 30),
+    "age10_24":  _c("B01001", *range(5, 11), *range(29, 35)),
     "age18_24":  _c("B01001", *range(7, 11), *range(31, 35)),
     "pop16_24":  _c("B23001", 3, 10, 17, 89, 96, 103),
     "clf16_24":  _c("B23001", 6, 13, 20, 92, 99, 106),
@@ -226,6 +227,7 @@ EXPECTED_LABELS = {
     "under25": ["Under 5 years", "5 to 9 years", "10 to 14 years", "15 to 17 years", "18 and 19 years",
                 "20 years", "21 years", "22 to 24 years"] * 2,
     "age10_17": ["10 to 14 years", "15 to 17 years"] * 2,
+    "age10_24": ["10 to 14 years", "15 to 17 years", "18 and 19 years", "20 years", "21 years", "22 to 24 years"] * 2,
     "pop16_24": ["16 to 19 years:", "20 and 21 years:", "22 to 24 years:"] * 2,
     "clf16_24": ["Civilian:"] * 6,
     "une16_24": ["Unemployed"] * 6,
@@ -288,6 +290,7 @@ def derive_youth(d, m):
         "neet_16_19": pct(S("neet16_19"), S("teen16_19")),
         "no_diploma_18_24": pct(S("nodip18_24"), S("adult18_24")),
         "_den_10_17": S("age10_17"),
+        "_den_10_24": S("age10_24"),
         "_den_18_24": S("age18_24"),
         "_den_under25": under25,
         "_den_16_24": pop1624,
@@ -323,6 +326,9 @@ def youth_rates(rec, years_shootings):
         return per * num / den / years
     rec["arrests_u18_rate"] = rate(rec.get("arrests_u18"), rec.get("_den_10_17"), 1000)
     rec["arrests_18_24_rate"] = rate(rec.get("arrests_18_24"), rec.get("_den_18_24"), 1000)
+    a18, a24 = rec.get("arrests_u18"), rec.get("arrests_18_24")
+    rec["arrests_u25"] = (a18 + a24) if a18 is not None and a24 is not None else None
+    rec["arrests_u25_rate"] = rate(rec["arrests_u25"], rec.get("_den_10_24"), 1000)
     v = (rec.get("viol_vict_u18") or 0) + (rec.get("viol_vict_18_24") or 0)
     rec["viol_vict_u25"] = v
     rec["viol_vict_u25_rate"] = rate(v, rec.get("_den_under25"), 1000)
@@ -1135,27 +1141,31 @@ VARS = [
     ("Young people: need", "no_diploma_18_24", "Young adults 18 to 24 without a diploma", "pct", "%",
      "Share of residents 18 to 24 whose schooling stopped short of a high school diploma or equivalency (ACS B15001). Includes some 18-year-olds still in high school."),
 
+    ("Young people: arrests, 2024", "arrests_u25_rate", "Arrests under 25, per 1,000 residents 10 to 24", "num1", "per 1,000 residents 10–24",
+     "NYPD arrests of people 24 and younger in 2024 (the under-18 and 18-to-24 groups combined) per 1,000 residents aged 10 to 24. NYPD records age only in bands, so 24 and younger is the closest cut to \"under 24\". Counted where the arrest was made; the quarter of arrests NYPD logged at a precinct station house are left out. See the under-18 count for the caveats. Not shown where fewer than 100 residents are 10 to 24."),
+    ("Young people: arrests, 2024", "arrests_u25", "Arrests under 25 (count)", "int", "arrests",
+     "NYPD arrests of people 24 and younger in calendar 2024, in NYPD's own patrol, transit and housing jurisdictions: the under-18 and 18-to-24 counts added together, with the same placement rules and caveats."),
     ("Young people: arrests, 2024", "arrests_u18_rate", "Arrests under 18, per 1,000 residents 10 to 17", "num1", "per 1,000 residents 10–17",
      "NYPD arrests of people under 18 in 2024 per 1,000 residents aged 10 to 17. The arrest is counted where it was made and the residents where they live, so places that draw young people from elsewhere, such as shopping strips and transit hubs, run high. Not shown where fewer than 100 residents are 10 to 17. See the count for the caveats on 2024 and on station-house arrests."),
     ("Young people: arrests, 2024", "arrests_u18", "Arrests under 18 (count)", "int", "arrests",
-     "NYPD arrests of people under 18 in calendar 2024, in NYPD's own patrol, transit and housing jurisdictions, placed where the arrest was made. 2024 is the latest full year in which NYPD's file records an age for nearly every arrest; the 2025 file has no age on 53% of arrests. A third of under-18 arrests (and a quarter of all arrests of people under 25) are logged at the precinct station house rather than a street location; those are spread across the precinct in proportion to its other arrests of the same age group, so counts are estimates. Arrests reflect police activity as well as offending, and where someone is arrested is not where they live."),
+     "NYPD arrests of people under 18 in calendar 2024, in NYPD's own patrol, transit and housing jurisdictions, placed where the arrest was made. 2024 is the latest full year in which NYPD's file records an age for nearly every arrest; the 2025 file has no age on 53% of arrests. NYPD logged a third of 2024 under-18 arrests at the precinct station house because it had no street location for them (footnote 6 of NYPD's arrest data). Those are left out, so counts understate, by more in precincts that log more arrests that way (from 15% to 44% of youth arrests, depending on the precinct). An arrest whose street point sits on a boundary is split equally between the areas that meet there. Arrests reflect police activity as well as offending, and where someone is arrested is not where they live."),
     ("Young people: arrests, 2024", "arrests_18_24_rate", "Arrests ages 18 to 24, per 1,000 residents 18 to 24", "num1", "per 1,000 residents 18–24",
      "NYPD arrests of people aged 18 to 24 in 2024 per 1,000 residents aged 18 to 24. Same caveats as the under-18 rate. Not shown where fewer than 100 residents are 18 to 24."),
     ("Young people: arrests, 2024", "arrests_18_24", "Arrests ages 18 to 24 (count)", "int", "arrests",
-     "NYPD arrests of people aged 18 to 24 in calendar 2024, placed where the arrest was made, with station-house arrests spread across the precinct as described for the under-18 count."),
+     "NYPD arrests of people aged 18 to 24 in calendar 2024, placed where the arrest was made. Arrests NYPD logged at a precinct station house (23% of this age group) are left out, as described for the under-18 count."),
 
     ("Young people: violence", "shoot_vict_u25_rate", "Shooting victims under 25, per 10,000 residents under 25 a year", "num2", "per 10,000 residents under 25, a year",
      "People under 25 shot in the area, July 2023 through June 2026, as a yearly average per 10,000 residents under 25 (NYPD shooting victims). Counted where the shooting happened, not where the victim lived."),
     ("Young people: violence", "shoot_vict_u25", "Shooting victims under 25 (count, 3 years)", "int", "people",
-     "People under 25 shot from July 2023 through June 2026, placed where the shooting happened (NYPD shooting incidents and victims). NYPD logs about one in eight of these shootings at the precinct station house; those are spread across the precinct in proportion to its other shootings."),
+     "People under 25 shot from July 2023 through June 2026, placed where the shooting happened (NYPD shooting incidents and victims). NYPD logs about one in eight of these shootings at the precinct station house, without a street location; those are left out."),
     ("Young people: violence", "shoot_susp_u25_rate", "Shootings with a suspect under 25, per 10,000 residents a year", "num2", "per 10,000 residents, a year",
      "Shooting incidents with at least one suspect under 25, July 2023 through June 2026, as a yearly average per 10,000 residents. NYPD lists no suspect for about two in five shootings, so this undercounts."),
     ("Young people: violence", "shoot_susp_u25", "Shootings with a suspect under 25 (count, 3 years)", "int", "shootings",
-     "Shooting incidents from July 2023 through June 2026 in which NYPD lists at least one suspect under 25, placed where the shooting happened; about one in nine logged at the precinct station house is spread across the precinct. A suspect is someone NYPD identified or described, not necessarily someone arrested or convicted."),
+     "Shooting incidents from July 2023 through June 2026 in which NYPD lists at least one suspect under 25, placed where the shooting happened; the one in nine that NYPD logged at the precinct station house, without a street location, are left out. A suspect is someone NYPD identified or described, not necessarily someone arrested or convicted."),
     ("Young people: violence", "viol_vict_u25_rate", "Violent crimes against people under 25, per 1,000 residents under 25", "num1", "per 1,000 residents under 25",
      "Murders, robberies and felony assaults with a victim under 25, July 2025 through June 2026, per 1,000 residents under 25. Counted where the crime happened. See the count for what is included."),
     ("Young people: violence", "viol_vict_u25", "Violent crimes against people under 25 (count)", "int", "complaints",
-     "Murders, robberies and felony assaults reported to NYPD from July 2025 through June 2026 in which the victim was under 25, by report date. Rape is left out because NYPD records nearly every rape complaint at the precinct station house to protect victims. About 5% of these complaints carry no victim age and are not counted. The 2% that NYPD logs at the precinct station house are spread across the precinct."),
+     "Murders, robberies and felony assaults reported to NYPD from July 2025 through June 2026 in which the victim was under 25, by report date. Rape is left out because NYPD records nearly every rape complaint at the precinct station house to protect victims. About 5% of these complaints carry no victim age and are not counted. The 2% that NYPD logged at the precinct station house, without a street location, are left out."),
 
     ("Summer jobs (SYEP)", "syep_sites_1mi", "Summer jobs sites within a mile", "num1", "sites",
      "Summer Youth Employment Program sites within one mile. For a tract, measured from its Census internal point, a point inside the tract near its middle; for a neighborhood, averaged across its tracts weighted by residents 16 to 24, so it reflects what a typical young resident has nearby. Sites are summer 2025 locations from the Department of Youth and Community Development (DYCD)."),
@@ -1256,11 +1266,11 @@ VARS = [
 
     # --- 7. Crime ---
     ("Crime (rolling 12 mo.)", "crime_total_rate", "Major-felony rate", "num1", "per 1,000 residents",
-     "All seven major felonies — murder, rape, robbery, felony assault, burglary, grand larceny, grand larceny of motor vehicle — per 1,000 residents over the most recent 12 months (NYPD). Denominator is residential population, so areas with few residents but heavy daytime or visitor traffic (Midtown, FiDi, Times Square, the parks, transit hubs) show inflated rates that reflect crimes against commuters and visitors, not residents."),
+     "All seven major felonies — murder, rape, robbery, felony assault, burglary, grand larceny, grand larceny of motor vehicle — per 1,000 residents over the most recent 12 months (NYPD). Complaints NYPD logs at the precinct station house (4% of them, including nearly every rape) have no street location and are left out. Denominator is residential population, so areas with few residents but heavy daytime or visitor traffic (Midtown, FiDi, Times Square, the parks, transit hubs) show inflated rates that reflect crimes against commuters and visitors, not residents."),
     ("Crime (rolling 12 mo.)", "crime_violent_rate", "Violent-crime rate", "num1", "per 1,000 residents",
-     "Murder, rape, robbery, and felony assault per 1,000 residents over the most recent 12 months (NYPD). Same residential-denominator caveat as the major-felony rate: commercial and transit-hub areas can look extreme because few people live there."),
+     "Murder, rape, robbery, and felony assault per 1,000 residents over the most recent 12 months (NYPD). Complaints NYPD logs at the precinct station house, which include nearly every rape (to protect victims), have no street location and are left out, so in practice this rate counts very few rapes. Same residential-denominator caveat as the major-felony rate: commercial and transit-hub areas can look extreme because few people live there."),
     ("Crime (rolling 12 mo.)", "crime_property_rate", "Property-crime rate", "num1", "per 1,000 residents",
-     "Burglary, grand larceny, and grand larceny of motor vehicle per 1,000 residents over the most recent 12 months (NYPD). Same residential-denominator caveat: in commercial-heavy areas the rate captures crimes against businesses and visitors as well as residents."),
+     "Burglary, grand larceny, and grand larceny of motor vehicle per 1,000 residents over the most recent 12 months (NYPD). Complaints NYPD logs at the precinct station house, without a street location, are left out. Same residential-denominator caveat: in commercial-heavy areas the rate captures crimes against businesses and visitors as well as residents."),
 
     # --- 8. Education ---
     # Ordered low → high attainment.

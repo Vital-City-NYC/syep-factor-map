@@ -222,7 +222,8 @@ def fetch_arrests(stations, index):
                 "other_agency_excluded": {k: all_youth[k] - expect[k] for k in expect}})
     print(f"Arrests {yr}: {expect['<18']:,} under 18, {expect['18-24']:,} aged 18-24 in NYPD jurisdictions "
           f"(other agencies excluded: {rep['other_agency_excluded']}); "
-          f"{rep['at_station_house']:,} at a station house, {rep['unplaced']} unplaced, {bad} without coordinates")
+          f"{rep['left_out_at_station_house']:,} at a station house left out {rep['left_out_by_category']}, "
+          f"{rep['shared_on_boundary']:,} shared on a boundary, {rep['unplaced']} unplaced, {bad} without coordinates")
     return counts, rep
 
 

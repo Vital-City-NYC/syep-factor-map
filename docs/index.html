@@ -672,6 +672,48 @@
   #ai-caution-btn { background: #7a1f2b; color: #fff; border: 0; font: inherit; font-size: 10.5px; padding: 3px 8px; cursor: pointer; margin-top: 8px; }
   #ai-caution-pop { display: none; background: #14213d; color: #fff; font-size: 11.5px; line-height: 1.5; padding: 10px 12px; margin-top: 6px; }
   #ai-caution-pop.open { display: block; }
+
+  /* ===== Measure chooser ===== */
+  #chooser { border: var(--edge); background: var(--panel); padding: 12px; margin: 0 0 12px; }
+  .ch-title { font-size: 10.5px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+  .ch-row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 6px; }
+  .ch-axis { flex: 0 0 62px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; }
+  .ch-swatch { width: 14px; height: 14px; flex: 0 0 auto; }
+  .ch-x .ch-swatch { background: linear-gradient(to right, #f0ece2, #5b9fcf); border: 1px solid #5b9fcf; }
+  .ch-y .ch-swatch { background: linear-gradient(to top, #f0ece2, #e7466d); border: 1px solid #e7466d; }
+  .pick-btn { flex: 1; text-align: left; background: var(--paper); border: 1px solid var(--ink); padding: 7px 30px 7px 10px;
+    font: inherit; cursor: pointer; position: relative; line-height: 1.25; min-height: 44px; }
+  .pick-btn:hover, .pick-btn.open { background: #fff; outline: 2px solid #dde44c; outline-offset: -1px; }
+  .pick-btn .pb-name { display: block; font-size: 13.5px; font-weight: 700; color: var(--ink); }
+  .pick-btn .pb-group { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+  .pick-btn .pb-caret { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--ink); }
+  .ch-tools { display: flex; align-items: center; gap: 10px; margin: 4px 0 10px 70px; }
+  #swap-btn { font: inherit; font-size: 11.5px; font-weight: 700; background: var(--panel); border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
+  #swap-btn:hover { background: #dde44c; }
+  .ch-hint { font-size: 11px; color: var(--muted); }
+  .ch-sub { display: block; font-size: 11px; color: var(--ink-2); margin: 2px 0 4px; }
+  #preset-select { width: 100%; font: inherit; font-size: 13px; padding: 7px 8px; border: 1px solid var(--rule); background: #fff; border-radius: 0; }
+  #pick-pop { border: var(--edge); background: #fff; margin: 4px 0 10px; }
+  #pick-pop .pp-head { display: flex; border-bottom: 1px solid var(--rule); }
+  #pick-search { flex: 1; border: 0; padding: 9px 10px; font: inherit; font-size: 14px; outline: none; background: #fff; }
+  #pick-close { border: 0; background: transparent; font-size: 18px; padding: 0 12px; cursor: pointer; color: var(--muted); }
+  .pp-note { font-size: 11px; color: var(--muted); padding: 6px 10px 0; }
+  .pp-note:empty { display: none; }
+  #pick-list { max-height: min(52vh, 460px); overflow-y: auto; padding: 0 0 6px; }
+  .pp-group { position: sticky; top: 0; background: #fff; font-size: 10.5px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+    padding: 8px 10px 4px; border-bottom: 1px solid var(--rule); color: var(--ink); }
+  .pp-item { display: block; width: 100%; text-align: left; border: 0; background: transparent; font: inherit; font-size: 13px;
+    padding: 6px 10px; cursor: pointer; color: var(--ink); line-height: 1.3; }
+  .pp-item:hover, .pp-item.kbd { background: #f7f8dd; }
+  .pp-item.current { font-weight: 800; }
+  .pp-item.current::after { content: "  ✓ current"; font-weight: 400; color: var(--muted); font-size: 11px; }
+  .pp-item[disabled] { color: var(--muted); cursor: not-allowed; }
+  .pp-item[disabled]::after { content: "  (on the other axis)"; font-size: 11px; }
+  .pp-item .hl { background: #fff59d; }
+  .pp-empty { padding: 10px; font-size: 12px; color: var(--muted); }
+  .axis-link { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
+  .axis-link:hover { background: #f7f8dd; }
+  @media (max-width: 560px) { .ch-axis { flex-basis: 54px; } .ch-tools { margin-left: 0; } .ch-hint { display: none; } }
 </style>
 </head>
 <body>
@@ -680,8 +722,8 @@
     <h2 id="ob-title">Two measures at once</h2>
     <p>Each neighborhood is colored by where it falls on two measures you choose: blue grows with the horizontal one, magenta with the vertical one, and the dark plum corner is high on both.</p>
     <ul class="ob-tips">
-      <li><b>Start with a preset</b>, such as youth poverty against how many summer jobs program sites are nearby.</li>
-      <li><b>Or pick any two</b> of 94 measures: young people, need, arrests, shootings and program sites, plus everything from the population explorer.</li>
+      <li><b>Pick the two measures</b> at the top left: one goes <b>across</b> (blue), one goes <b>up</b> (magenta). Click either to search all 96: young people, need, arrests, shootings, program sites and everything from the population explorer.</li>
+      <li><b>Or start from a ready-made comparison</b>, such as youth poverty against how many summer jobs program sites are nearby.</li>
       <li><b>Hover a legend square</b> to see only the neighborhoods in it. Click a neighborhood for all of its numbers.</li>
       <li>Switch to <b>Tract</b> for finer detail, with much larger margins of error.</li>
     </ul>
@@ -697,11 +739,47 @@
     <div class="kicker"><span class="k-series">Rubber meets road</span><span class="k-slash">/</span><span class="k-topic">Summer youth employment</span></div>
     <h1>The summer jobs factor map</h1>
     <div class="sub">Pair any two neighborhood measures to weigh where New York City's Summer Youth Employment Program could do more: how many young people live there, how many are poor or out of school and work, how often young people are arrested or shot, and where program sites already are.</div>
+    <div class="related"><a href="how-i-built-this.html">How I built this, and every judgment call</a></div>
     <div class="related">Companion tools: <a href="https://vitalcity-nyc.github.io/syep-smart-scale/" target="_blank" rel="noopener">The summer jobs gap</a> · <a href="https://vital-city-nyc.github.io/syep-crime-evidence/" target="_blank" rel="noopener">What the research says</a></div>
 
     <div id="mode-toggle">
       <button data-mode="bivariate">Two measures</button>
       <button data-mode="single">One measure</button>
+    </div>
+
+    <!-- Measure chooser: the main control, kept at the top -->
+    <div id="chooser">
+      <div id="choose-biv">
+        <div class="ch-title">Compare two measures</div>
+        <div class="ch-row">
+          <span class="ch-axis ch-x" title="Blue grows left to right on the legend"><span class="ch-swatch"></span>Across</span>
+          <button type="button" class="pick-btn" data-axis="x" aria-haspopup="listbox"></button>
+        </div>
+        <div class="ch-row">
+          <span class="ch-axis ch-y" title="Magenta grows bottom to top on the legend"><span class="ch-swatch"></span>Up</span>
+          <button type="button" class="pick-btn" data-axis="y" aria-haspopup="listbox"></button>
+        </div>
+        <div class="ch-tools">
+          <button type="button" id="swap-btn" title="Put the across measure up and the up measure across">⇅ Swap</button>
+          <span class="ch-hint">Click either measure to change it.</span>
+        </div>
+        <label class="ch-sub" for="preset-select">Or start from a ready-made comparison</label>
+        <select id="preset-select"></select>
+      </div>
+      <div id="choose-single" class="hidden">
+        <div class="ch-title">Map one measure</div>
+        <div class="ch-row">
+          <button type="button" class="pick-btn" data-axis="single" aria-haspopup="listbox"></button>
+        </div>
+      </div>
+      <div id="pick-pop" class="hidden" role="dialog" aria-label="Choose a measure">
+        <div class="pp-head">
+          <input id="pick-search" type="search" placeholder="Search measures… (try “poverty”, “arrest”, “shoot”)" autocomplete="off" spellcheck="false">
+          <button type="button" id="pick-close" aria-label="Close">×</button>
+        </div>
+        <div class="pp-note" id="pick-note"></div>
+        <div id="pick-list" role="listbox"></div>
+      </div>
     </div>
 
     <div id="geo-toggle" title="Neighborhoods are City Planning's Neighborhood Tabulation Areas, each built from about nine census tracts. Combining tracts cuts a typical relative margin of error to roughly a third, turning many shaky tract estimates into reliable neighborhood ones.">
@@ -742,34 +820,10 @@
       <label id="sites-toggle"><input type="checkbox" id="show-sites"> <span class="site-dot-legend"></span> Show summer jobs program sites (summer 2025)</label>
     </div>
 
-    <!-- Single-var picker -->
-    <div id="single-pane">
-      <div class="section-label" style="margin-bottom:4px">Variable</div>
-      <div id="var-filter-wrap" style="position:relative">
-        <input id="var-filter" type="search" placeholder="Filter 94 measures… (try “poverty”, “shoot”, “arrest”)" autocomplete="off" spellcheck="false">
-        <button id="var-filter-clear" title="Clear">×</button>
-      </div>
-      <div id="var-empty">No variables match that filter.</div>
-      <div id="var-list"></div>
-    </div>
-
-    <!-- Bivariate picker -->
-    <div id="biv-pane" class="hidden">
-      <div class="section-label" id="preset-section-label">Preset pairings</div>
-      <div id="presets"></div>
-
-      <div class="section-label" style="margin-top:16px">Pick any two</div>
-      <div class="picker">
-        <label>X axis (horizontal in legend)</label>
-        <select id="pick-x"></select>
-        <label>Y axis (vertical in legend)</label>
-        <select id="pick-y"></select>
-      </div>
-    </div>
-
     <div id="footer">
       Sources: U.S. Census Bureau American Community Survey 2020–24 5-year estimates (via <a href="https://censusreporter.org" target="_blank" rel="noopener">Census Reporter</a>) and the 2020 census; NYPD <a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Arrests-Data-Historic-/8h9b-rp9u" target="_blank" rel="noopener">arrests</a>, <a href="https://data.cityofnewyork.us/Public-Safety/Shootings-2006-Present-/5ucz-vwe8" target="_blank" rel="noopener">shootings</a> and complaints (<a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Historic/qgea-i56i" target="_blank" rel="noopener">historic</a>, <a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Current-Year-To-Date-/5uac-w243" target="_blank" rel="noopener">year to date</a>), the last running 12 months to <span id="crime-window-end">—</span>; Department of Youth and Community Development <a href="https://data.cityofnewyork.us/d/ebkm-iyma" target="_blank" rel="noopener">program sites</a>; City Planning neighborhood and tract boundaries. Every other measure is documented on the methodology page. Gray = no data; pale = park, cemetery, airport, base or jail.
       <div style="margin-top:8px">
+        <a href="how-i-built-this.html"><b>How I built this</b></a> ·
         <a href="methodology.html">Methodology</a> ·
         <a href="https://github.com/Vital-City-NYC/syep-factor-map" target="_blank" rel="noopener">Source</a> ·
         <a href="#" id="export-csv">Download CSV of current view</a>
@@ -1360,13 +1414,13 @@ function renderBivLegend() {
   const yTicks = (binY.q2 > binY.q1 ? tick("33.33%", binY.q2, my.fmt, "top") : "") + tick("66.67%", binY.q1, my.fmt, "top");
   const xTicks = tick("33.33%", binX.q1, mx.fmt, "left") + (binX.q2 > binX.q1 ? tick("66.67%", binX.q2, mx.fmt, "left") : "");
   document.getElementById("biv-legend").innerHTML = `
-    <div class="biv-cap">↑ <b>${my.label}</b></div>
+    <div class="biv-cap">↑ <b class="axis-link" data-open-axis="y" title="Change the up measure">${my.label}</b></div>
     <div class="biv-row">
       <div class="biv-yrange">${yTicks}</div>
       ${bivGridHtml("biv-swatches")}
     </div>
     <div class="biv-xrow"><div class="biv-xrange">${xTicks}</div></div>
-    <div class="biv-xcap">→ <b>${mx.label}</b></div>
+    <div class="biv-xcap">→ <b class="axis-link" data-open-axis="x" title="Change the across measure">${mx.label}</b></div>
     <div class="biv-note">Each axis is split into thirds across the ${bivN.toLocaleString()} ${unitWord()} that have both values. The ticks mark the cut points; counts in parentheses:</div>
     ${thirdsLine(mx, binX, xKey)}
     ${thirdsLine(my, binY, yKey)}
@@ -1374,13 +1428,17 @@ function renderBivLegend() {
 
   // Floating legend on the map — same grid, slightly larger swatches.
   document.getElementById("biv-map-legend").innerHTML = `
-    <div class="ml-cap">↑ <b>${my.label}</b></div>
+    <div class="ml-cap">↑ <b class="axis-link" data-open-axis="y" title="Change the up measure">${my.label}</b></div>
     <div class="ml-row">
       <div class="ml-yrange">${yTicks}</div>
       ${bivGridHtml("ml-swatches")}
     </div>
     <div class="ml-xrow"><div class="ml-xrange">${xTicks}</div></div>
-    <div class="ml-xcap">→ <b>${mx.label}</b></div>`;
+    <div class="ml-xcap">→ <b class="axis-link" data-open-axis="x" title="Change the across measure">${mx.label}</b></div>`;
+  document.querySelectorAll("[data-open-axis]").forEach(el => el.addEventListener("click", () => {
+    document.getElementById("sidebar").scrollTop = 0;
+    openPicker(el.dataset.openAxis);
+  }));
 
   // Attach brushing handlers to every cell in BOTH legends. Hovering a 3×3 cell
   // dims all areas not in that bin pair; mouseout restores the full styling.
@@ -1426,110 +1484,124 @@ function brushBivariate(bx, by) {
   });
 }
 
-// ===== single-var picker =====
-function buildVarList() {
-  const root = document.getElementById("var-list");
+// ===== measure chooser =====
+// Three buttons share one searchable list: "across" (x), "up" (y) and, in one-measure
+// mode, "single". The list opens right under the button that was clicked.
+function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
+let pickAxis = null;
+let pickKbd = -1;
+function keyFor(axis) { return axis === "x" ? xKey : axis === "y" ? yKey : currentKey; }
+function updatePickButtons() {
+  document.querySelectorAll(".pick-btn").forEach(b => {
+    const m = metaOf(keyFor(b.dataset.axis));
+    if (!m) return;
+    b.innerHTML = `<span class="pb-name">${escapeHtml(m.label)}</span><span class="pb-group">${escapeHtml(m.group)}</span><span class="pb-caret">Change ▾</span>`;
+    b.title = m.desc;
+  });
+}
+function renderPickList(query) {
+  const q = (query || "").trim().toLowerCase();
+  const list = document.getElementById("pick-list");
+  const other = pickAxis === "x" ? yKey : pickAxis === "y" ? xKey : null;
+  const cur = keyFor(pickAxis);
   const groups = {};
-  VARS.forEach(v => { (groups[v.group] = groups[v.group] || []).push(v); });
+  VARS.forEach(v => {
+    const hay = (v.label + " " + v.group + " " + (v.desc || "")).toLowerCase();
+    if (q && !q.split(/\s+/).every(w => hay.includes(w))) return;
+    (groups[v.group] = groups[v.group] || []).push(v);
+  });
+  const mark = t => {
+    if (!q) return escapeHtml(t);
+    let out = escapeHtml(t);
+    q.split(/\s+/).filter(Boolean).forEach(w => {
+      const re = new RegExp("(" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig");
+      out = out.replace(re, '<span class="hl">$1</span>');
+    });
+    return out;
+  };
   let html = "";
   Object.keys(groups).forEach(g => {
-    const gid = "g-" + g.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-    html += `<div class="var-group" data-group="${g}" id="${gid}"><div class="var-group-title">${g}</div>`;
+    html += `<div class="pp-group">${escapeHtml(g)}</div>`;
     groups[g].forEach(v => {
-      const search = (v.label + " " + v.group + " " + (v.desc || "")).toLowerCase();
-      html += `<button class="var-btn" data-key="${v.key}" data-search="${escapeAttr(search)}">${v.label}</button>`;
+      const dis = v.key === other ? " disabled" : "";
+      const curc = v.key === cur ? " current" : "";
+      html += `<button type="button" class="pp-item${curc}" data-key="${v.key}" title="${escapeAttr(v.desc)}"${dis}>${mark(v.label)}</button>`;
     });
-    html += `</div>`;
   });
-  root.innerHTML = html;
-  root.querySelectorAll(".var-btn").forEach(b => {
-    b.addEventListener("click", () => setSingleVar(b.dataset.key));
-  });
-
-  // Update filter placeholder with live count
-  const fi = document.getElementById("var-filter");
-  if (fi) fi.placeholder = `Filter ${VARS.length} measures… (try “poverty”, “shoot”, “arrest”)`;
+  list.innerHTML = html || `<div class="pp-empty">No measures match “${escapeHtml(query)}”.</div>`;
+  pickKbd = -1;
+  list.querySelectorAll(".pp-item:not([disabled])").forEach(b => b.addEventListener("click", () => choose(b.dataset.key)));
+  // Scroll the list itself (never the page or sidebar) to the current measure.
+  const curEl = list.querySelector(".pp-item.current");
+  list.scrollTop = (curEl && !q) ? Math.max(0, curEl.offsetTop - list.offsetTop - list.clientHeight / 2) : 0;
 }
-
-function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
-
-function filterVarList(query) {
-  const q = (query || "").trim().toLowerCase();
-  const list = document.getElementById("var-list");
-  const empty = document.getElementById("var-empty");
-  const wrap = document.getElementById("var-filter-wrap");
-  wrap.classList.toggle("has-text", q.length > 0);
-
-  let anyVisible = false;
-  list.querySelectorAll(".var-group").forEach(group => {
-    let groupHasMatch = false;
-    group.querySelectorAll(".var-btn").forEach(btn => {
-      const search = btn.dataset.search || "";
-      const match = !q || search.includes(q);
-      btn.classList.toggle("hidden", !match);
-      if (match) { groupHasMatch = true; anyVisible = true; }
-    });
-    group.classList.toggle("hidden", !groupHasMatch);
-  });
-  empty.style.display = anyVisible ? "none" : "block";
+function openPicker(axis) {
+  const pop = document.getElementById("pick-pop");
+  const btn = document.querySelector(`.pick-btn[data-axis="${axis}"]`);
+  if (!btn) return;
+  if (pickAxis === axis && !pop.classList.contains("hidden")) { closePicker(); return; }
+  pickAxis = axis;
+  document.querySelectorAll(".pick-btn").forEach(b => b.classList.toggle("open", b === btn));
+  btn.closest(".ch-row").after(pop);
+  pop.classList.remove("hidden");
+  const n = VARS.length;
+  document.getElementById("pick-note").textContent = axis === "single" ? `All ${n} measures, grouped by topic.`
+    : `All ${n} measures. This one goes ${axis === "x" ? "across (left to right on the legend, blue)" : "up (bottom to top on the legend, magenta)"}.`;
+  const input = document.getElementById("pick-search");
+  input.value = "";
+  renderPickList("");
+  const sb = document.getElementById("sidebar");
+  const r = btn.getBoundingClientRect(), sr = sb.getBoundingClientRect();
+  if (r.top < sr.top || r.bottom > sr.bottom) sb.scrollTop += r.top - sr.top - 12;
+  input.focus({ preventScroll: true });
 }
-
-document.getElementById("var-filter").addEventListener("input", e => filterVarList(e.target.value));
-document.getElementById("var-filter").addEventListener("keydown", e => {
-  if (e.key === "Escape") { e.target.value = ""; filterVarList(""); }
-  if (e.key === "Enter") {
-    // Auto-select the first visible match
-    const first = document.querySelector(".var-btn:not(.hidden)");
-    if (first) {
-      setSingleVar(first.dataset.key);
-      first.scrollIntoView({ block: "nearest" });
+function closePicker() {
+  document.getElementById("pick-pop").classList.add("hidden");
+  document.querySelectorAll(".pick-btn").forEach(b => b.classList.remove("open"));
+  pickAxis = null;
+}
+function choose(key) {
+  const axis = pickAxis;
+  closePicker();
+  if (axis === "x") setBivPair(key, yKey, "");
+  else if (axis === "y") setBivPair(xKey, key, "");
+  else setSingleVar(key);
+}
+document.querySelectorAll(".pick-btn").forEach(b => b.addEventListener("click", () => openPicker(b.dataset.axis)));
+document.getElementById("pick-close").addEventListener("click", closePicker);
+document.getElementById("pick-search").addEventListener("input", e => renderPickList(e.target.value));
+document.getElementById("pick-search").addEventListener("keydown", e => {
+  const items = [...document.querySelectorAll("#pick-list .pp-item:not([disabled])")];
+  if (e.key === "Escape") { closePicker(); return; }
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    pickKbd = Math.max(0, Math.min(items.length - 1, pickKbd + (e.key === "ArrowDown" ? 1 : -1)));
+    items.forEach((b, i) => b.classList.toggle("kbd", i === pickKbd));
+    const it = items[pickKbd], list = document.getElementById("pick-list");
+    if (it) {
+      const top = it.offsetTop - list.offsetTop;
+      if (top < list.scrollTop) list.scrollTop = top;
+      else if (top + it.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = top + it.offsetHeight - list.clientHeight;
     }
   }
+  if (e.key === "Enter" && items.length) { e.preventDefault(); choose(items[Math.max(0, pickKbd)].dataset.key); }
 });
-document.getElementById("var-filter-clear").addEventListener("click", () => {
-  const fi = document.getElementById("var-filter");
-  fi.value = ""; filterVarList(""); fi.focus();
-});
-function setSingleActiveBtn() {
-  document.querySelectorAll(".var-btn").forEach(b => {
-    b.classList.toggle("active", b.dataset.key === currentKey);
-  });
-}
+document.getElementById("swap-btn").addEventListener("click", () => setBivPair(yKey, xKey, ""));
+function setSingleActiveBtn() { updatePickButtons(); }
 
-// ===== bivariate picker / presets =====
 function buildPresets() {
-  const root = document.getElementById("presets");
-  const display = PRESETS.map((p, i) => ({ p, i }));
-  root.innerHTML = display.map(({ p, i }, displayIdx) => `
-    <button class="preset" data-x="${p.x}" data-y="${p.y}" data-i="${i}">
-      <div class="nm">${displayIdx + 1}. ${p.name}</div>
-      <div class="axes">${metaOf(p.x).label} × ${metaOf(p.y).label}</div>
-    </button>`).join("");
-  const label = document.getElementById("preset-section-label");
-  if (label) label.textContent = `${PRESETS.length} preset pairings`;
-  root.querySelectorAll(".preset").forEach(b => {
-    b.addEventListener("click", () => {
-      const p = PRESETS[+b.dataset.i];
-      setBivPair(p.x, p.y, p.story);
-    });
+  const sel = document.getElementById("preset-select");
+  sel.innerHTML = `<option value="">Choose one…</option>` +
+    PRESETS.map((p, i) => `<option value="${i}">${escapeHtml(p.name)}</option>`).join("");
+  sel.addEventListener("change", () => {
+    if (sel.value === "") return;
+    const p = PRESETS[+sel.value];
+    setBivPair(p.x, p.y, p.story);
   });
 }
-function buildBivPickers() {
-  const sx = document.getElementById("pick-x"), sy = document.getElementById("pick-y");
-  const groups = {};
-  VARS.forEach(v => { (groups[v.group] = groups[v.group] || []).push(v); });
-  function opts() {
-    let h = "";
-    Object.keys(groups).forEach(g => {
-      h += `<optgroup label="${g}">`;
-      groups[g].forEach(v => { h += `<option value="${v.key}">${v.label}</option>`; });
-      h += `</optgroup>`;
-    });
-    return h;
-  }
-  sx.innerHTML = opts(); sy.innerHTML = opts();
-  sx.addEventListener("change", () => setBivPair(sx.value, yKey, ""));
-  sy.addEventListener("change", () => setBivPair(xKey, sy.value, ""));
+function syncPresetSelect() {
+  const i = PRESETS.findIndex(pr => pr.x === xKey && pr.y === yKey);
+  document.getElementById("preset-select").value = i >= 0 ? String(i) : "";
 }
 
 // ===== mode + variable setters =====
@@ -1537,8 +1609,10 @@ function setMode(m) {
   mode = m;
   document.querySelectorAll("#mode-toggle button").forEach(b => b.classList.toggle("active", b.dataset.mode === m));
   const single = m === "single";
-  document.getElementById("single-pane").classList.toggle("hidden", !single);
-  document.getElementById("biv-pane").classList.toggle("hidden", single);
+  document.getElementById("choose-single").classList.toggle("hidden", !single);
+  document.getElementById("choose-biv").classList.toggle("hidden", single);
+  closePicker();
+  updatePickButtons();
   document.getElementById("single-legend-wrap").classList.toggle("hidden", !single);
   document.getElementById("biv-legend").classList.toggle("hidden", single);
   document.getElementById("biv-story").classList.toggle("hidden", single);
@@ -1561,11 +1635,8 @@ function setBivPair(x, y, story) {
   const preset = PRESETS.find(pr => pr.x === x && pr.y === y);
   xKey = x; yKey = y; currentStory = story || (preset ? preset.story : "");
   rebuildBivBins();
-  document.querySelectorAll(".preset").forEach(b => {
-    b.classList.toggle("active", b.dataset.x === x && b.dataset.y === y);
-  });
-  document.getElementById("pick-x").value = x;
-  document.getElementById("pick-y").value = y;
+  updatePickButtons();
+  syncPresetSelect();
   applyCurrent();
 }
 
@@ -1585,9 +1656,9 @@ function applyCurrent() {
   } else {
     const mx = metaOf(xKey), my = metaOf(yKey);
     document.getElementById("cur-title").textContent = `${mx.label} × ${my.label}`;
-    document.getElementById("cur-desc").innerHTML = `<b>X →</b> ${escapeHtml(mx.desc)}<br><b>Y ↑</b> ${escapeHtml(my.desc)}`;
+    document.getElementById("cur-desc").innerHTML = `<b>Across →</b> ${escapeHtml(mx.desc)}<br><b>Up ↑</b> ${escapeHtml(my.desc)}`;
     const sx = sourceOf(mx), sy = sourceOf(my);
-    document.getElementById("cur-src").textContent = sx === sy ? `Source: ${sx}` : `Sources: X, ${sx}. Y, ${sy}`;
+    document.getElementById("cur-src").textContent = sx === sy ? `Source: ${sx}` : `Sources: across, ${sx}. Up, ${sy}`;
     document.getElementById("biv-story").textContent = (currentStory && geoLevel === "tract")
       ? currentStory + " (This note describes the neighborhood view; tracts are noisier.)" : currentStory ||
       `Each color says where an area falls on both variables at once: its third (low, middle or high) on the horizontal measure and its third on the vertical one. The dark corner is high on both; the pale corner is low on both.`;
@@ -2179,14 +2250,11 @@ Promise.all([
   RELEASE = release;
   try {
     if (release && release.crime_window) document.getElementById("crime-window-end").textContent = release.crime_window.end;
-    buildVarList();
     buildPresets();
-    buildBivPickers();
+    updatePickButtons();
     currentScale = buildScale(metaOf(currentKey));
     setSingleActiveBtn();
     rebuildBivBins();
-    document.getElementById("pick-x").value = xKey;
-    document.getElementById("pick-y").value = yKey;
     applyCurrent();
   } catch (e) {
     console.error("setup error:", e);

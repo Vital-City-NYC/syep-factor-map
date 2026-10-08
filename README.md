@@ -1,9 +1,10 @@
 # The summer jobs factor map
 
-A two-measure (bivariate) map of New York City's neighborhoods and census tracts for weighing where the Summer Youth Employment Program (SYEP) could do more. Pair any two of 94 measures: young people (16 to 24, under 18, under 25, the 2020 count of 14- to 24-year-olds), their poverty, unemployment, schooling and disconnection from school and work, 2024 arrests of people under 25, shootings and violent crime involving young people, and where SYEP program sites are, plus every measure from the New York City population explorer it was built from.
+A two-measure (bivariate) map of New York City's neighborhoods and census tracts for weighing where the Summer Youth Employment Program (SYEP) could do more. Pair any two of 96 measures: young people (16 to 24, under 18, under 25, the 2020 count of 14- to 24-year-olds), their poverty, unemployment, schooling and disconnection from school and work, 2024 arrests of people under 25, shootings and violent crime involving young people, and where SYEP program sites are, plus every measure from the New York City population explorer it was built from.
 
 **Live:** https://vital-city-nyc.github.io/syep-factor-map/
 **Methodology:** https://vital-city-nyc.github.io/syep-factor-map/methodology.html
+**How I built this (every step and judgment call):** https://vital-city-nyc.github.io/syep-factor-map/how-i-built-this.html
 
 Companion tools: [The summer jobs gap](https://vitalcity-nyc.github.io/syep-smart-scale/) and [What the research says](https://vital-city-nyc.github.io/syep-crime-evidence/).
 
