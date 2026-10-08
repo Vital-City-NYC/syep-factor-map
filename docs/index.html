@@ -800,7 +800,7 @@
     </div>
     <div id="search-box">
       <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input id="search-input" type="text" placeholder="Search a NYC address or place…" autocomplete="off" spellcheck="false">
+      <input id="search-input" type="text" placeholder="Search an address or place…" autocomplete="off" spellcheck="false">
       <button id="search-clear" title="Clear">×</button>
       <div id="search-results"></div>
     </div>
@@ -1588,7 +1588,8 @@ function applyCurrent() {
     document.getElementById("cur-desc").innerHTML = `<b>X →</b> ${escapeHtml(mx.desc)}<br><b>Y ↑</b> ${escapeHtml(my.desc)}`;
     const sx = sourceOf(mx), sy = sourceOf(my);
     document.getElementById("cur-src").textContent = sx === sy ? `Source: ${sx}` : `Sources: X, ${sx}. Y, ${sy}`;
-    document.getElementById("biv-story").textContent = currentStory ||
+    document.getElementById("biv-story").textContent = (currentStory && geoLevel === "tract")
+      ? currentStory + " (This note describes the neighborhood view; tracts are noisier.)" : currentStory ||
       `Each color says where an area falls on both variables at once: its third (low, middle or high) on the horizontal measure and its third on the vertical one. The dark corner is high on both; the pale corner is low on both.`;
     renderBivLegend();
     renderScatter();
