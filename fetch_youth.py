@@ -43,6 +43,11 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 
 ARREST_YEAR = 2024
 MAX_MISSING_AGE_SHARE = 0.02
+# NYPD's own jurisdictions (0 patrol, 1 transit, 2 housing, per the dataset's column
+# description). Codes 3 and up are other agencies; they include a cluster of arrests at
+# one Hunts Point point under code 72 (mostly offenses against public administration
+# and felony assault) that would otherwise dominate that neighborhood.
+NYPD_JURISDICTIONS = "jurisdiction_code in('0','1','2')"
 SHOOTING_YEARS = 3
 VIOLENT_NO_RAPE = ("101", "105", "106")          # murder, robbery, felony assault
 MAX_UNKNOWN_VICTIM_AGE = 0.08
@@ -196,8 +201,11 @@ def fetch_arrests(stations, index):
     if total < 100_000 or missing / total > MAX_MISSING_AGE_SHARE:
         raise SystemExit(f"Arrests {yr}: {missing:,} of {total:,} lack an age group -- stopping")
     rows = soql_all("8h9b-rp9u", "arrest_key, age_group, arrest_precinct, latitude, longitude",
-                    f"{window} and age_group in('<18','18-24')", "arrest_key")
-    expect = {g["age_group"]: int(g["n"]) for g in groups if g.get("age_group") in ("<18", "18-24")}
+                    f"{window} and age_group in('<18','18-24') and {NYPD_JURISDICTIONS}", "arrest_key")
+    nypd = soql("8h9b-rp9u", f"select age_group, count(*) as n where {window} and {NYPD_JURISDICTIONS} "
+                             "and age_group in('<18','18-24') group by age_group")
+    expect = {g["age_group"]: int(g["n"]) for g in nypd}
+    all_youth = {g["age_group"]: int(g["n"]) for g in groups if g.get("age_group") in ("<18", "18-24")}
     got = Counter(r["age_group"] for r in rows)
     if dict(got) != expect:
         raise SystemExit(f"Arrests: pulled {dict(got)} but counts say {expect}")
@@ -210,8 +218,10 @@ def fetch_arrests(stations, index):
         recs.append({"lat": ll[0], "lon": ll[1], "pct": r.get("arrest_precinct"), "age": r["age_group"]})
     counts, rep = place(recs, stations, index, "pct", "age")
     rep.update({"year": yr, "all_arrests": total, "missing_age": missing,
-                "under18": expect["<18"], "age18_24": expect["18-24"], "no_coordinates": bad})
-    print(f"Arrests {yr}: {expect['<18']:,} under 18, {expect['18-24']:,} aged 18-24; "
+                "under18": expect["<18"], "age18_24": expect["18-24"], "no_coordinates": bad,
+                "other_agency_excluded": {k: all_youth[k] - expect[k] for k in expect}})
+    print(f"Arrests {yr}: {expect['<18']:,} under 18, {expect['18-24']:,} aged 18-24 in NYPD jurisdictions "
+          f"(other agencies excluded: {rep['other_agency_excluded']}); "
           f"{rep['at_station_house']:,} at a station house, {rep['unplaced']} unplaced, {bad} without coordinates")
     return counts, rep
 
@@ -221,7 +231,7 @@ def fetch_arrests_2026(stations, index):
     groups = soql("uip8-fykc", "select age_group, count(*) as n, max(arrest_date) as mx group by age_group")
     end = max(g["mx"] for g in groups)[:10]
     rows = soql_all("uip8-fykc", "arrest_key, age_group, arrest_precinct, latitude, longitude",
-                    "age_group in('<18','18-24')", "arrest_key")
+                    f"age_group in('<18','18-24') and {NYPD_JURISDICTIONS}", "arrest_key")
     recs = []
     for r in rows:
         ll = latlon(r)
