@@ -58,7 +58,7 @@
   </div>
 
   <h2 id="build">1. The build, step by step</h2>
-  <p>Three Python scripts produce the data files; the page itself is plain HTML and JavaScript that reads them. Everything runs from public sources, and every pull checks itself and stops rather than writing an empty or implausible file. Source code: <a href="https://github.com/Vital-City-NYC/syep-factor-map" target="_blank" rel="noopener">github.com/Vital-City-NYC/syep-factor-map</a>.</p>
+  <p>Four Python scripts produce the data files; the page itself is plain HTML and JavaScript that reads them. Everything runs from public sources, and every pull checks itself and stops rather than writing an empty or implausible file. Source code: <a href="https://github.com/Vital-City-NYC/syep-factor-map" target="_blank" rel="noopener">github.com/Vital-City-NYC/syep-factor-map</a>.</p>
   <ol>
     <li><strong>Find NYPD's station houses</strong> (<code>fetch_youth.py</code>). Read the address on each of the 78 precinct pages on nyc.gov, geocode each with NYC Planning's GeoSearch, and confirm the ZIP code matches. Add the 40th Precinct's former building. Saved to <code>data/stations.json</code> with the page each address came from.</li>
     <li><strong>Pull 2024 arrests</strong> of people under 18 and 18 to 24 from NYPD's arrest file, keeping NYPD's own jurisdictions. The script first counts how many 2024 arrests lack an age and stops if it is more than 2%.</li>
@@ -67,28 +67,45 @@
     <li><strong>Place every NYPD record in a census tract</strong> (<code>nypd_places.py</code>). A record within 140 meters of its own precinct's station house is left out. Every other record is assigned by its point; a point on a tract boundary is shared equally among the tracts that meet there.</li>
     <li><strong>Pull the summer program sites</strong> from the Department of Youth and Community Development (DYCD), keep the latest fiscal year, drop year-round programs and keep one entry per location. Count sites in each tract and within a mile of each tract.</li>
     <li><strong>Pull the 2020 census count</strong> of residents aged exactly 14 through 24 for every tract.</li>
-    <li><strong>Pull the major-felony counts</strong> for the inherited crime measures (<code>fetch_crime.py</code>), placed by the same rules.</li>
-    <li><strong>Pull the survey data and build every measure</strong> (<code>build.py</code>): American Community Survey (ACS) 2020–24 tables for every tract from Census Reporter, a check that every table cell carries the label the Census Bureau gives it, every measure derived for tracts and then for neighborhoods (summing the underlying counts, never averaging rates), and the files the page reads.</li>
-    <li><strong>Check the preset explanations</strong> (<code>scripts_check_presets.py</code>): every place and borough the text names must sit in the part of the grid the text describes.</li>
+    <li><strong>Split tracts along precinct lines and count every NYPD record by precinct</strong> (<code>fetch_precincts.py</code>, added Oct. 9). Pull City Planning's precinct boundaries and all 37,984 census blocks with their 2020 populations; place each block in a precinct; record what share of each tract's residents lives in each precinct. Count every arrest, shooting and violent crime by the precinct NYPD assigned it, for the same windows, and stop unless the totals match the neighborhood pull.</li>
+    <li><strong>Pull the major-felony counts</strong> (<code>fetch_crime.py</code>), placed by the same rules. Since Oct. 9 they feed only the caveat on areas with large daytime crowds.</li>
+    <li><strong>Pull the survey data and build every measure</strong> (<code>build.py</code>): American Community Survey (ACS) 2020–24 tables for every tract from Census Reporter, a check that every table cell carries the label the Census Bureau gives it, every measure derived for tracts and then for neighborhoods and precincts (summing the underlying counts, never averaging rates; precincts take each tract's share), a check that precinct sums equal the city totals, and the files the page reads, which carry only the 25 measures the map offers.</li>
+    <li><strong>Check the preset explanations</strong> (<code>scripts_check_presets.py</code>): every place and borough the text names must sit in the part of the grid the text describes, in both views, and every quoted correlation must match.</li>
   </ol>
 
   <h2 id="calls">2. Judgment calls</h2>
 
   <h3>What the map is</h3>
   <div class="call"><h3>Two measures at once, with every measure selectable</h3><dl>
-    <dt>Decision</dt><dd>The default view colors each area by two measures; all 96 measures can go on either axis, including the 69 from the population explorer.</dd>
-    <dt>Why</dt><dd>Requested: a two-measure map with the youth factors and the other variables selectable.</dd>
+    <dt>Decision</dt><dd>The default view colors each area by two measures, and any measure can go on either axis.</dd>
+    <dt>Why</dt><dd>Requested: a two-measure map with the youth factors selectable.</dd>
     <dt>Decided by</dt><dd><span class="who josh">Josh</span></dd></dl></div>
+  <div class="call"><h3>25 measures about young people, not 96</h3><dl>
+    <dt>Decision</dt><dd>The menu offers only the young-people, need, arrests and violence measures plus summer jobs sites within a mile: 25 in all.</dd>
+    <dt>Why</dt><dd>The first version carried over all 69 measures from the population explorer (race, housing, elections and more), which buried the youth measures the map exists for.</dd>
+    <dt>Effect</dt><dd>71 measures removed, including the count of sites located inside an area; the remaining values are unchanged.</dd>
+    <dt>Decided by</dt><dd><span class="who josh">Josh</span>, Oct. 9</dd></dl></div>
   <div class="call"><h3>No combined score</h3><dl>
     <dt>Decision</dt><dd>The map never folds measures into an index or ranking.</dd>
     <dt>Why</dt><dd>Any index embeds weights that are themselves judgment calls. The companion tool, The summer jobs gap, offers an explicit need index with adjustable weights; this one keeps each measure separate so the reader sees what drives a pattern.</dd>
     <dt>Alternative</dt><dd>A weighted need score per neighborhood.</dd>
     <dt>Decided by</dt><dd><span class="who claude">Claude</span></dd></dl></div>
-  <div class="call"><h3>Neighborhoods by default, tracts on request</h3><dl>
-    <dt>Decision</dt><dd>City Planning's 262 neighborhood areas are the default; the 2,325 census tracts are one click away.</dd>
-    <dt>Why</dt><dd>The survey's youth measures are noisy at tract level: a tract may have 150 teenagers, so a share can swing widely. Combining about nine tracts cuts the typical margin of error to roughly a third.</dd>
-    <dt>Effect</dt><dd>Tract view shows more detail with much less certainty; the page can fade unreliable estimates.</dd>
-    <dt>Decided by</dt><dd><span class="who carried">Carried over</span></dd></dl></div>
+  <div class="call"><h3>Police precincts by default, neighborhoods one click away</h3><dl>
+    <dt>Decision</dt><dd>The map opens on NYPD's 77 precincts plus Central Park; a switch shows City Planning's 262 neighborhoods.</dd>
+    <dt>Why</dt><dd>NYPD logs a quarter of youth arrests and one in eight shootings at a precinct station house, with no street location. A precinct map can count every one of them by the precinct NYPD assigned; a neighborhood map has to leave them out, because a precinct overlaps a median of four neighborhoods and as many as ten.</dd>
+    <dt>Alternatives</dt><dd>Neighborhoods only (finer areas, about 43,000 residents each, but missing those records); precincts only.</dd>
+    <dt>Effect</dt><dd>The default view counts 9,450 under-18 arrests in 2024, against 6,296 placed in neighborhoods. Precincts average about 110,000 residents and blur differences within them.</dd>
+    <dt>Decided by</dt><dd><span class="who josh">Josh</span>, Oct. 9</dd></dl></div>
+  <div class="call"><h3>No tract view</h3><dl>
+    <dt>Decision</dt><dd>The census-tract view the first version offered was removed.</dd>
+    <dt>Why</dt><dd>Tract estimates of small youth groups are too noisy to rank; combining about nine tracts cuts a typical margin of error to roughly a third. Removing tracts did not by itself let the map count station-house records (see above).</dd>
+    <dt>Decided by</dt><dd><span class="who josh">Josh</span>, Oct. 9</dd></dl></div>
+  <div class="call"><h3>Census tracts split along precinct lines by 2020 block population</h3><dl>
+    <dt>Decision</dt><dd>Each tract's survey figures are divided among precincts in proportion to where its residents lived in the 2020 census, block by block. Margins of error for the split pieces are scaled by the same shares.</dd>
+    <dt>Why</dt><dd>Tract lines usually follow precinct lines but not always: 160 of 2,327 tracts have less than 95% of their residents in one precinct. Blocks are small enough to place exactly.</dd>
+    <dt>Alternatives</dt><dd>Split by land area (worse where people live unevenly, as next to parks); give each tract wholly to the precinct holding its center (simpler, but misplaces part of 160 tracts).</dd>
+    <dt>Effect</dt><dd>Precinct totals equal the city totals exactly. Figures for split tracts assume 2020 residence patterns still hold; their margins of error are slightly understated.</dd>
+    <dt>Decided by</dt><dd><span class="who claude">Claude</span></dd></dl></div>
   <div class="call"><h3>Parks, cemeteries, airports, bases and jails get counts but no rates</h3><dl>
     <dt>Decision</dt><dd>City Planning classifies 65 neighborhood areas as non-residential. They keep counts (people, arrests, sites) but show no shares, medians or rates.</dd>
     <dt>Why</dt><dd>The few people counted there live mostly in places like Rikers Island and Fort Hamilton, and their percentages swing wildly (Miller Field, with 75 residents, came out 85% Hispanic and was setting the top of a color scale).</dd>
@@ -131,11 +148,11 @@
     <dt>Decided by</dt><dd><span class="who claude">Claude</span></dd></dl></div>
 
   <h3>Where NYPD records go on the map</h3>
-  <div class="call"><h3>Records without a street location are left out</h3><dl>
-    <dt>Decision</dt><dd>Records NYPD logs at a precinct station house are not counted in any area. No record is assigned to a place by its precinct.</dd>
+  <div class="call"><h3>Records without a street location are left out of the neighborhood view</h3><dl>
+    <dt>Decision</dt><dd>Records NYPD logs at a precinct station house are not counted in any neighborhood. No record is assigned to a neighborhood by its precinct. The precinct view, added Oct. 9, counts them by the precinct NYPD assigned.</dd>
     <dt>Why</dt><dd>NYPD's own footnote says arrests it cannot geocode are placed at the station house; nearly every rape complaint is placed there too, to protect victims, and so are about one in eight shootings involving young people. Those records have no known location.</dd>
     <dt>Alternatives</dt><dd>(1) Leave them at the station house, which piles a precinct's worth into one tract (up to 95 extra violent felonies a year in some). (2) Spread them across the precinct in proportion to its other records, which an earlier version of this map did; that counts them in neighborhoods by estimate.</dd>
-    <dt>Effect</dt><dd>Counts understate: 33% of under-18 arrests and 23% of 18-to-24 arrests are left out, from 15% to 44% depending on the precinct. Shootings with a young suspect lose 12%; young shooting victims 13%; violent crimes against young people 2%. The violent-crime rate from the population explorer now counts very few rapes.</dd>
+    <dt>Effect</dt><dd>Neighborhood counts understate: 33% of under-18 arrests and 23% of 18-to-24 arrests are left out, from 15% to 44% depending on the precinct. Shootings with a young suspect lose 12%; young shooting victims 13%; violent crimes against young people 2%. The violent-crime rate from the population explorer now counts very few rapes.</dd>
     <dt>Decided by</dt><dd><span class="who josh">Josh</span></dd></dl></div>
   <div class="call"><h3>How station-house records are recognized</h3><dl>
     <dt>Decision</dt><dd>A record within 140 meters of its own precinct's station house counts as placed there. The 40th Precinct's old building at 257 Alexander Avenue counts too.</dd>
@@ -173,10 +190,10 @@
     <dt>Why</dt><dd>DYCD publishes no slot counts by site and no list of the employer worksites where participants work. Sites show where the program has a presence, not how many young people it serves there.</dd>
     <dt>Decided by</dt><dd><span class="who carried">Carried over</span> (same rules as The summer jobs gap, which also finds 122)</dd></dl></div>
   <div class="call"><h3>"Within a mile" from a point inside each tract</h3><dl>
-    <dt>Decision</dt><dd>For a tract, count sites within one mile of the Census Bureau's internal point; for a neighborhood, average its tracts' counts, weighted by residents 16 to 24.</dd>
+    <dt>Decision</dt><dd>For each tract, count sites within one mile of the Census Bureau's internal point; for a neighborhood or precinct, average its tracts' counts, weighted by residents 16 to 24.</dd>
     <dt>Why</dt><dd>Young people use sites across neighborhood lines; a count of sites inside a neighborhood's borders would treat a site across the street as absent. Weighting by young residents reflects what a typical young person has nearby.</dd>
-    <dt>Alternative</dt><dd>The summer jobs gap's two-step method, which also divides each site among all the young people who can reach it. This map keeps the simpler count, and both measures are shown.</dd>
-    <dt>Decided by</dt><dd><span class="who claude">Claude</span></dd></dl></div>
+    <dt>Alternative</dt><dd>The summer jobs gap's two-step method, which also divides each site among all the young people who can reach it. This map keeps the simpler count. A count of sites inside each area was also offered until Oct. 9.</dd>
+    <dt>Decided by</dt><dd><span class="who claude">Claude</span> chose the method; <span class="who josh">Josh</span> chose to keep only this site measure (Oct. 9)</dd></dl></div>
 
   <h3>Survey data</h3>
   <div class="call"><h3>Neighborhood medians computed from income brackets</h3><dl>
@@ -192,7 +209,7 @@
     <dt>Decided by</dt><dd><span class="who claude">Claude</span></dd></dl></div>
   <div class="call"><h3>The seven ready-made comparisons</h3><dl>
     <dt>Decision</dt><dd>Seven pairings framed as investment questions (need against nearby sites, violence against nearby sites, and so on), each with a short explanation that names places.</dd>
-    <dt>Why</dt><dd>To give readers a way in. The explanations were written from the data and are tested by code; they describe the neighborhood view.</dd>
+    <dt>Why</dt><dd>To give readers a way in. Each has two explanations, one for precincts and one for neighborhoods, written from the data and tested by code.</dd>
     <dt>Decided by</dt><dd><span class="who claude">Claude</span>; not yet reviewed by Josh</dd></dl></div>
   <div class="call"><h3>Design</h3><dl>
     <dt>Decision</dt><dd>Vital City's design system (Halyard type, black hairlines, no rounded corners), the "Rubber meets road / Summer youth employment" kicker and the same two-way palette as The summer jobs gap (blue across, magenta up, plum where both are high).</dd>
@@ -202,9 +219,9 @@
   <ul>
     <li><strong>Census labels.</strong> The build stops if any of the 113 table cells behind the youth measures carries a different label than expected.</li>
     <li><strong>City Planning's tables.</strong> Children under 18 and residents under 25 match in all 262 neighborhood areas; child poverty matches in all 197 residential ones; medians match within $2.</li>
-    <li><strong>Totals.</strong> Arrests, shootings, violent crimes and program sites reconcile with counts queried directly from NYC Open Data, and the map's sums equal them minus the station-house records left out.</li>
+    <li><strong>Totals.</strong> Arrests, shootings, violent crimes and program sites reconcile with counts queried directly from NYC Open Data. The precinct view's sums equal them exactly; the neighborhood view's equal them minus the station-house records left out. Precinct residents add up to the city total, 8,483,844.</li>
     <li><strong>Independent recomputation.</strong> A separate check, written from scratch, recomputed ten neighborhoods from the Census Bureau's and NYC Open Data's own interfaces: every survey value, 2020 count, total and rate matched. It caught a distance formula that ran 0.26% long and three wording problems, all fixed.</li>
-    <li><strong>Preset text.</strong> Every place and borough named in the seven explanations is checked against the data by a script.</li>
+    <li><strong>Preset text.</strong> Every place, borough count and correlation named in the 14 explanations (seven per view) is checked against the data by a script.</li>
     <li><strong>Browser testing.</strong> Shared links, both geographies, both modes, the menus and phone-width layout were tested in a browser before publishing.</li>
   </ul>
 
@@ -219,13 +236,22 @@
     <li>The measure menus moved to the top of the page, labeled "across" and "up," searchable, with a swap button and a list of ready-made comparisons.</li>
   </ul>
 
+  <p>On Oct. 9, 2026, at Josh's direction:</p>
+  <ul>
+    <li>Police precincts became the default view, counting every arrest, shooting and violent crime, including those NYPD logs at a station house; neighborhoods remain one click away.</li>
+    <li>The census-tract view was removed.</li>
+    <li>The menu was cut from 96 measures to the 25 about young people and summer jobs sites within a mile.</li>
+    <li>The companion link to the old research table was replaced with Vital City's <a href="https://vital-city-nyc.github.io/SYEP_evidence_tracker/" target="_blank" rel="noopener">evidence browser</a>.</li>
+  </ul>
+
   <h2 id="not">5. What the map does not do</h2>
   <ul>
     <li>It does not say where young people who are arrested or shot live. No public small-area data records that.</li>
     <li>It does not show crimes committed by young people. Arrests and shooting suspects are the closest public measures, and both reflect police activity.</li>
     <li>It does not include the city's youth detention admissions, which are published only by community district, a different geography.</li>
     <li>It does not measure program capacity. DYCD publishes no slots by site.</li>
-    <li>It does not rank neighborhoods or recommend where to invest. It shows where measures coincide.</li>
+    <li>It does not rank areas or recommend where to invest. It shows where measures coincide.</li>
+    <li>It does not place station-house records in neighborhoods; only the precinct view counts them.</li>
   </ul>
   <p style="margin-top:28px"><a href="index.html">← Back to the map</a> · <a href="methodology.html">Methodology and sources</a></p>
 </main>

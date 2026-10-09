@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The summer jobs factor map</title>
-<meta name="description" content="Pair any two neighborhood measures to weigh where New York City's Summer Youth Employment Program could do more.">
+<meta name="description" content="Pair any two measures, by police precinct or neighborhood, to weigh where New York City's Summer Youth Employment Program could do more.">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://use.typekit.net/qqk2vto.css">
 <link rel="stylesheet" href="https://vital-city-nyc.github.io/vital-city-design-system/tokens/tokens.css">
@@ -96,6 +96,7 @@
   }
   #mode-toggle button.active { background: var(--ink); color: #fff; }
 
+  #geo-note { font-size: 11.5px; color: var(--muted); line-height: 1.45; margin: 10px 0 4px; }
   #geo-toggle {
     display: flex; align-items: center; gap: 4px;
     margin-bottom: 12px;
@@ -720,12 +721,12 @@
 <div id="onboarding-overlay" class="hidden">
   <div id="onboarding-card" role="dialog" aria-labelledby="ob-title">
     <h2 id="ob-title">Two measures at once</h2>
-    <p>Each neighborhood is colored by where it falls on two measures you choose: blue grows with the horizontal one, magenta with the vertical one, and the dark plum corner is high on both.</p>
+    <p>Each area is colored by where it falls on two measures you choose: blue grows with the horizontal one, magenta with the vertical one, and the dark plum corner is high on both.</p>
     <ul class="ob-tips">
-      <li><b>Pick the two measures</b> at the top left: one goes <b>across</b> (blue), one goes <b>up</b> (magenta). Click either to search all 96: young people, need, arrests, shootings, program sites and everything from the population explorer.</li>
+      <li><b>Pick the two measures</b> at the top left: one goes <b>across</b> (blue), one goes <b>up</b> (magenta). Click either to choose from 25: how many young people live there, their poverty, work and schooling, arrests, violence and the summer jobs sites within a mile.</li>
       <li><b>Or start from a ready-made comparison</b>, such as youth poverty against how many summer jobs program sites are nearby.</li>
-      <li><b>Hover a legend square</b> to see only the neighborhoods in it. Click a neighborhood for all of its numbers.</li>
-      <li>Switch to <b>Tract</b> for finer detail, with much larger margins of error.</li>
+      <li><b>Hover a legend square</b> to see only the areas in it. Click an area for all of its numbers.</li>
+      <li>The map opens on <b>police precincts</b>, where every arrest, shooting and violent crime counts. Switch to <b>neighborhoods</b> for finer areas; there, the records NYPD logs at a precinct station house are left out because their street location is unknown.</li>
     </ul>
     <p style="font-size:12.5px;color:var(--muted);margin-top:14px;">Arrests and shootings are counted where they happened, not where young people live. The methodology page explains every measure and its limits.</p>
     <div class="ob-footer">
@@ -738,9 +739,9 @@
   <aside id="sidebar">
     <div class="kicker"><span class="k-series">Rubber meets road</span><span class="k-slash">/</span><span class="k-topic">Summer youth employment</span></div>
     <h1>The summer jobs factor map</h1>
-    <div class="sub">Pair any two neighborhood measures to weigh where New York City's Summer Youth Employment Program could do more: how many young people live there, how many are poor or out of school and work, how often young people are arrested or shot, and where program sites already are.</div>
+    <div class="sub">Pair any two measures, by police precinct or neighborhood, to weigh where New York City's Summer Youth Employment Program could do more: how many young people live there, how many are poor or out of school and work, how often young people are arrested or shot, and where program sites already are.</div>
     <div class="related"><a href="how-i-built-this.html">How I built this, and every judgment call</a></div>
-    <div class="related">Companion tools: <a href="https://vitalcity-nyc.github.io/syep-smart-scale/" target="_blank" rel="noopener">The summer jobs gap</a> · <a href="https://vital-city-nyc.github.io/syep-crime-evidence/" target="_blank" rel="noopener">What the research says</a></div>
+    <div class="related">Companion tools: <a href="https://vitalcity-nyc.github.io/syep-smart-scale/" target="_blank" rel="noopener">The summer jobs gap</a> · <a href="https://vital-city-nyc.github.io/SYEP_evidence_tracker/" target="_blank" rel="noopener">What the evidence shows</a></div>
 
     <div id="mode-toggle">
       <button data-mode="bivariate">Two measures</button>
@@ -782,11 +783,12 @@
       </div>
     </div>
 
-    <div id="geo-toggle" title="Neighborhoods are City Planning's Neighborhood Tabulation Areas, each built from about nine census tracts. Combining tracts cuts a typical relative margin of error to roughly a third, turning many shaky tract estimates into reliable neighborhood ones.">
-      <span class="geo-label">Geography:</span>
-      <button data-geo="nta" class="active">Neighborhood</button>
-      <button data-geo="tract">Tract</button>
+    <div id="geo-toggle">
+      <span class="geo-label">Areas:</span>
+      <button data-geo="pct" class="active">Police precincts</button>
+      <button data-geo="nta">Neighborhoods</button>
     </div>
+    <div id="geo-note"></div>
 
     <!-- Shared current-metric card -->
     <div class="meta-card">
@@ -804,7 +806,7 @@
       </div>
 
       <!-- Reliability shading toggle (applies to both single + bivariate) -->
-      <label id="reliability-toggle" title="Fade tracts whose margin of error exceeds 66% of the estimate (the 'unreliable' tier under a common convention, not an official Census Bureau standard). The data is always shown; this just visually flags uncertainty.">
+      <label id="reliability-toggle" title="Fade neighborhoods whose margin of error exceeds 66% of the estimate (the 'unreliable' tier under a common convention, not an official Census Bureau standard). The data is always shown; this just visually flags uncertainty.">
         <input type="checkbox" id="show-reliability"> Fade unreliable estimates
       </label>
 
@@ -821,7 +823,7 @@
     </div>
 
     <div id="footer">
-      Sources: U.S. Census Bureau American Community Survey 2020–24 5-year estimates (via <a href="https://censusreporter.org" target="_blank" rel="noopener">Census Reporter</a>) and the 2020 census; NYPD <a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Arrests-Data-Historic-/8h9b-rp9u" target="_blank" rel="noopener">arrests</a>, <a href="https://data.cityofnewyork.us/Public-Safety/Shootings-2006-Present-/5ucz-vwe8" target="_blank" rel="noopener">shootings</a> and complaints (<a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Historic/qgea-i56i" target="_blank" rel="noopener">historic</a>, <a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Current-Year-To-Date-/5uac-w243" target="_blank" rel="noopener">year to date</a>), the last running 12 months to <span id="crime-window-end">—</span>; Department of Youth and Community Development <a href="https://data.cityofnewyork.us/d/ebkm-iyma" target="_blank" rel="noopener">program sites</a>; City Planning neighborhood and tract boundaries. Every other measure is documented on the methodology page. Gray = no data; pale = park, cemetery, airport, base or jail.
+      Sources: U.S. Census Bureau American Community Survey 2020–24 5-year estimates (via <a href="https://censusreporter.org" target="_blank" rel="noopener">Census Reporter</a>) and the 2020 census; NYPD <a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Arrests-Data-Historic-/8h9b-rp9u" target="_blank" rel="noopener">arrests</a>, <a href="https://data.cityofnewyork.us/Public-Safety/Shootings-2006-Present-/5ucz-vwe8" target="_blank" rel="noopener">shootings</a> and complaints (<a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Historic/qgea-i56i" target="_blank" rel="noopener">historic</a>, <a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Complaint-Data-Current-Year-To-Date-/5uac-w243" target="_blank" rel="noopener">year to date</a>), the last running 12 months to <span id="crime-window-end">—</span>; Department of Youth and Community Development <a href="https://data.cityofnewyork.us/d/ebkm-iyma" target="_blank" rel="noopener">program sites</a>; City Planning police precinct and neighborhood boundaries; 2020 census blocks. The methodology page documents every measure. Gray = no data; pale = park, cemetery, airport, base or jail.
       <div style="margin-top:8px">
         <a href="how-i-built-this.html"><b>How I built this</b></a> ·
         <a href="methodology.html">Methodology</a> ·
@@ -850,7 +852,7 @@
         <button class="sp-toggle" id="sp-toggle" title="Collapse">–</button>
       </div>
       <svg id="scatter-svg" width="266" height="200"></svg>
-      <div class="sp-foot">Each dot is a neighborhood. Hover to highlight on the map; hover a tract on the map to find it here.</div>
+      <div class="sp-foot">Each dot is a precinct. Hover to highlight on the map; hover the map to find it here.</div>
     </div>
     <div id="search-box">
       <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -860,7 +862,7 @@
     </div>
     <div id="detail-panel">
       <button class="close-btn" id="detail-close">×</button>
-      <h3 id="det-title">Tract</h3>
+      <h3 id="det-title">Precinct</h3>
       <div class="nta-name" id="det-nta"></div>
       <div id="det-body"></div>
     </div>
@@ -911,14 +913,19 @@ function fmtShort(v, fmt) {
   if (Math.abs(v) >= 1000) return d3.format(",.0f")(v);
   return d3.format(".1f")(v);
 }
-const unitWord = () => geoLevel === "nta" ? "neighborhoods" : "tracts";
+const unitWord = () => geoLevel === "pct" ? "precincts" : "neighborhoods";
+const unitOne = () => geoLevel === "pct" ? "precinct" : "neighborhood";
+const GEO_NOTES = {
+  pct: "Each area is an NYPD precinct. Every arrest, shooting and violent crime counts, by the precinct NYPD assigned it. Census figures are split along precinct lines by 2020 block population. Precincts average 110,000 residents.",
+  nta: "Each area is one of City Planning\u2019s 262 neighborhoods, finer than precincts. Records NYPD logged at a precinct station house are left out here because their street location is unknown: a quarter of youth arrests, one in eight shootings.",
+};
 
 // ===== state =====
 let VARS = [];
-let GEO_TRACTS = null;
 let GEO_NTAS = null;
+let GEO_PCT = null;
 let GEO = null;                  // currently active geometry
-let geoLevel = "nta";            // "tract" | "nta" — default to NTAs (lower MOEs, cleaner story)
+let geoLevel = "pct";            // "pct" (default) | "nta"; tracts were removed Oct. 9, 2026
 let RELEASE = null;
 let mode = "single";             // "single" | "bivariate"
 let showReliability = false;     // "fade unreliable estimates" toggle
@@ -940,7 +947,7 @@ function reliabilityTier(props, key) {
   return "unr";
 }
 // single-var
-let currentKey = "pop_total";
+let currentKey = "pop_16_24";
 let scaleMode = "quantile";
 let currentScale = null;
 // bivariate
@@ -1013,26 +1020,40 @@ function bivCell(xb, yb) { return BIV_PALETTE[yb][xb]; }
 
 // ===== bivariate presets =====
 // Corner names follow the legend: x runs left (low) to right (high), y runs bottom
-// (low) to top (high). Each story names its corners in plain terms and was checked
-// against the neighborhood data (Oct. 2026 build); the places named sit in the cells
-// described at the neighborhood level. Directions hold at the tract level too, but the
-// relationships are weaker there.
+// (low) to top (high). Each preset has two stories, one per view: story for
+// neighborhoods and storyPct for precincts. scripts_check_presets.py checks every place
+// and borough count they name against the data on each build.
 const PRESETS = [
   { x: "syep_sites_1mi", y: "pov_rate_16_24", name: "Youth poverty × sites nearby",
-    story: "Program sites already cluster where youth poverty is high: the upper-right (many sites within a mile, high poverty among 16- to 24-year-olds) is led by the Bronx, with Harlem, Bedford-Stuyvesant and Bushwick. The upper-left (high youth poverty, few sites nearby) is a short list: Borough Park, Kensington, Gravesend (South) and Brighton Beach in Brooklyn, Rockaway Beach-Arverne in Queens, Rosebank on Staten Island and Lenox Hill-Roosevelt Island in Manhattan. Youth poverty also runs high where many college students live off campus, such as Morningside Heights and the East Village, because the survey counts those students by their own incomes." },
+    story: "Program sites already cluster where youth poverty is high: the upper-right (many sites within a mile, high poverty among 16- to 24-year-olds) is led by the Bronx, with Harlem, Bedford-Stuyvesant and Bushwick. The upper-left (high youth poverty, few sites nearby) is a short list: Borough Park, Kensington, Gravesend (South) and Brighton Beach in Brooklyn, Rockaway Beach-Arverne in Queens, Rosebank on Staten Island and Lenox Hill-Roosevelt Island in Manhattan. Youth poverty also runs high where many college students live off campus, such as Morningside Heights and the East Village, because the survey counts those students by their own incomes.",
+    storyPct: "Across precincts, sites track youth poverty closely (correlation 0.69). The upper-right (many sites within a mile, high poverty among 16- to 24-year-olds) holds 19 precincts: nine in Manhattan, from the Lower East Side to Harlem, seven in the Bronx and three in Brooklyn. Just one precinct pairs high youth poverty with few sites nearby: the 66th (Borough Park). Youth poverty also runs high where many college students live off campus, as in the 26th (Morningside Heights) and the 9th (East Village)." },
   { x: "syep_sites_1mi", y: "neet_16_19", name: "Teens out of school and work × sites nearby",
-    story: "Sites track the share of 16- to 19-year-olds who are neither in school nor working only loosely. The upper-left (many such teens, few sites within a mile) is mostly Queens and outer Brooklyn: South Ozone Park, South Jamaica, Queens Village, East Elmhurst and Rockaway Beach-Arverne in Queens, Bay Ridge and Dyker Heights in Brooklyn, plus Wakefield-Woodlawn in the Bronx and Great Kills on Staten Island. The upper-right (many such teens, many sites) is led by the Bronx." },
+    story: "Sites track the share of 16- to 19-year-olds who are neither in school nor working only loosely. The upper-left (many such teens, few sites within a mile) is mostly Queens and outer Brooklyn: South Ozone Park, South Jamaica, Queens Village, East Elmhurst and Rockaway Beach-Arverne in Queens, Bay Ridge and Dyker Heights in Brooklyn, plus Wakefield-Woodlawn in the Bronx and Great Kills on Staten Island. The upper-right (many such teens, many sites) is led by the Bronx.",
+    storyPct: "Sites track the share of 16- to 19-year-olds who are neither in school nor working only loosely (correlation 0.30). The upper-left (many such teens, few sites within a mile) is four precincts: the 47th (Williamsbridge-Olinville) in the Bronx, the 68th (Bay Ridge) in Brooklyn, and the 103rd (Jamaica) and 115th (Jackson Heights) in Queens. The upper-right, high on both, is led by the Bronx, with six precincts, and Manhattan, with five." },
   { x: "syep_sites_1mi", y: "shoot_vict_u25_rate", name: "Young shooting victims × sites nearby",
-    story: "Sites are denser where young people are shot more often. The upper-left (more shooting victims under 25 per young resident, few sites within a mile) is mostly southeast Queens and the edges of the city: Jamaica, South Jamaica, Laurelton, Springfield Gardens (South) and Rockaway Beach-Arverne in Queens, Coney Island and Sheepshead Bay in Brooklyn, and Eastchester-Edenwald and Wakefield-Woodlawn in the Bronx. Shootings are counted where they happened, July 2023 through June 2026." },
+    story: "Sites are denser where young people are shot more often. The upper-left (more shooting victims under 25 per young resident, few sites within a mile) is mostly southeast Queens and the edges of the city: Jamaica, South Jamaica, Laurelton, Springfield Gardens (South) and Rockaway Beach-Arverne in Queens, Coney Island and Sheepshead Bay in Brooklyn, and Eastchester-Edenwald and Wakefield-Woodlawn in the Bronx. Shootings are counted where they happened, July 2023 through June 2026.",
+    storyPct: "Sites are denser where young people are shot more often (correlation 0.44). Three precincts pair a high rate of young shooting victims with few sites within a mile: the 47th (Williamsbridge-Olinville) in the Bronx, the 60th (Coney Island) in Brooklyn and the 103rd (Jamaica) in Queens. The upper-right, high on both, is led by the Bronx, with six precincts. Shootings are counted where they happened, July 2023 through June 2026, including those NYPD logged at a station house." },
   { x: "syep_sites_1mi", y: "viol_vict_u25_rate", name: "Violence against young people × sites nearby",
-    story: "The upper-left (a high rate of murders, robberies and felony assaults against people under 25, few sites within a mile) is seven neighborhoods: Jamaica and South Jamaica in Queens, Coney Island and Brighton Beach in Brooklyn, and Eastchester-Edenwald, Wakefield-Woodlawn and Westchester Square in the Bronx. The upper-right, high on both, is led by the Bronx, with Harlem and central Brooklyn." },
+    story: "The upper-left (a high rate of murders, robberies and felony assaults against people under 25, few sites within a mile) is seven neighborhoods: Jamaica and South Jamaica in Queens, Coney Island and Brighton Beach in Brooklyn, and Eastchester-Edenwald, Wakefield-Woodlawn and Westchester Square in the Bronx. The upper-right, high on both, is led by the Bronx, with Harlem and central Brooklyn.",
+    storyPct: "The upper-left (a high rate of murders, robberies and felony assaults against people under 25, few sites within a mile) is the same three precincts: the 47th (Williamsbridge-Olinville), the 60th (Coney Island) and the 103rd (Jamaica). The upper-right, high on both, is led by the Bronx, with seven precincts, and Manhattan, with six." },
   { x: "syep_sites_1mi", y: "pop_16_24", name: "Young people × sites nearby",
-    story: "Where the most 16- to 24-year-olds live with the fewest sites nearby. The upper-left (many young residents, few sites within a mile) includes Borough Park, Bay Ridge and Flatlands in Brooklyn; South Ozone Park, Jamaica and Queens Village in Queens; Eastchester-Edenwald in the Bronx; and Great Kills on Staten Island. This is a count, so larger neighborhoods rank higher." },
+    story: "Where the most 16- to 24-year-olds live with the fewest sites nearby. The upper-left (many young residents, few sites within a mile) includes Borough Park, Bay Ridge and Flatlands in Brooklyn; South Ozone Park, Jamaica and Queens Village in Queens; Eastchester-Edenwald in the Bronx; and Great Kills on Staten Island. This is a count, so larger neighborhoods rank higher.",
+    storyPct: "Where the most 16- to 24-year-olds live with the fewest sites nearby. The upper-left holds ten precincts, half of them in Queens: the 102nd (Woodhaven), 106th (South Ozone Park), 107th (Jamaica Hills-Briarwood), 109th (Flushing) and 115th (Jackson Heights). The rest are the 62nd (Bensonhurst) and 66th (Borough Park) in Brooklyn, the 121st and 122nd on Staten Island and the 47th in the Bronx. This is a count, so larger precincts rank higher." },
   { x: "unemp_16_24", y: "shoot_vict_u25_rate", name: "Youth unemployment × young shooting victims",
-    story: "Young people are shot more often where youth unemployment is high. The upper-right (high unemployment among 16- to 24-year-olds, many young shooting victims) is mostly the Bronx and central Brooklyn, including Mott Haven, the Concourse, Williamsbridge, Bedford-Stuyvesant and Crown Heights, plus Harlem and Jamaica. The lower-right (high unemployment, few young victims) is mostly Queens and Staten Island, such as Kew Gardens, Whitestone, Astoria and New Dorp." },
+    story: "Young people are shot more often where youth unemployment is high. The upper-right (high unemployment among 16- to 24-year-olds, many young shooting victims) is mostly the Bronx and central Brooklyn, including Mott Haven, the Concourse, Williamsbridge, Bedford-Stuyvesant and Crown Heights, plus Harlem and Jamaica. The lower-right (high unemployment, few young victims) is mostly Queens and Staten Island, such as Kew Gardens, Whitestone, Astoria and New Dorp.",
+    storyPct: "Young people are shot more often where youth unemployment is high (correlation 0.50). The upper-right holds 16 precincts, led by the Bronx, with six, plus four each in Manhattan and Brooklyn and two in Queens, the 101st (Far Rockaway) and 103rd (Jamaica). The lower-right (high unemployment, few young victims) is three precincts: the 62nd (Bensonhurst) and 63rd (Flatlands) in Brooklyn and the 106th (South Ozone Park) in Queens." },
   { x: "pov_rate_u18", y: "arrests_u18_rate", name: "Child poverty × arrests under 18",
-    story: "Across neighborhoods, the arrest rate for people under 18 shows almost no relationship to child poverty. Part of the reason is where arrests are counted. The upper-left (low child poverty, high arrest rate) is mostly Manhattan neighborhoods with few resident children, where arrests of young people who live elsewhere still count, such as Greenwich Village, Gramercy, Murray Hill and Hell's Kitchen. The lower-right (high child poverty, low arrest rate) includes Borough Park, Bensonhurst, Sunset Park, South Williamsburg and Washington Heights (South)." },
+    story: "Across neighborhoods, the arrest rate for people under 18 shows almost no relationship to child poverty. Part of the reason is where arrests are counted. The upper-left (low child poverty, high arrest rate) is mostly Manhattan neighborhoods with few resident children, where arrests of young people who live elsewhere still count, such as Greenwich Village, Gramercy, Murray Hill and Hell's Kitchen. The lower-right (high child poverty, low arrest rate) includes Borough Park, Bensonhurst, Sunset Park, South Williamsburg and Washington Heights (South).",
+    storyPct: "Across precincts, the arrest rate for people under 18 shows almost no relationship to child poverty (correlation −0.11). Part of the reason is where arrests are counted. The upper-left (low child poverty, high arrest rate) is mostly Manhattan precincts with few resident children, where arrests of young people who live elsewhere still count: the 6th (West Village), 13th (Gramercy), 14th (Midtown South) and 18th (Midtown North), with the 28th (Harlem South) and Brooklyn's 76th (Carroll Gardens) and 84th (Downtown Brooklyn). The lower-right (high child poverty, low arrest rate) is the 33rd (Washington Heights South), the 66th (Borough Park) and the 90th (South Williamsburg)." },
 ];
+
+// A preset's story describes the view it was checked against: story (neighborhoods)
+// or storyPct (precincts). Pairs picked by hand get the generic explanation.
+function storyFor(x, y, fallback) {
+  const pr = PRESETS.find(p => p.x === x && p.y === y);
+  if (!pr) return fallback || "";
+  return geoLevel === "pct" ? (pr.storyPct || "") : pr.story;
+}
 
 // ===== single-variable color scale =====
 function buildScale(varMeta) {
@@ -1248,11 +1269,12 @@ function crimeCaveat(props, key) {
   return "";
 }
 function placeLabel(props) {
-  return (geoLevel === "nta") ? (props.nta || "") : `${props.borough || ""} · Tract ${props.ct_label || props.geoid}`;
+  return props.name || props.nta || "";
 }
 function placeSub(props) {
+  if (props.precinct != null) return `${props.borough || ""}${props.covers ? " · mostly " + props.covers.replace(/; /g, ", ") : ""}`;
   const n = props.nta_tract_count;
-  return (geoLevel === "nta") ? `${props.borough || ""} · ${n} ${n === 1 ? "tract" : "tracts"}` : (props.nta || "");
+  return `${props.borough || ""} · ${n} census ${n === 1 ? "tract" : "tracts"}`;
 }
 function tooltipHtml(props) {
   if (mode === "single") {
@@ -1291,13 +1313,10 @@ function tooltipHtml(props) {
 // ===== detail panel =====
 function renderDetail(props) {
   document.getElementById("detail-panel").classList.add("open");
-  if (geoLevel === "nta") {
-    document.getElementById("det-title").textContent = props.nta || props.geoid;
-    document.getElementById("det-nta").textContent = `${placeSub(props)} · City Planning code ${props.geoid}`;
-  } else {
-    document.getElementById("det-title").textContent = `${props.borough || "NYC"} · Tract ${props.ct_label || props.geoid}`;
-    document.getElementById("det-nta").textContent = props.nta || "";
-  }
+  document.getElementById("det-title").textContent = placeLabel(props) || props.geoid;
+  document.getElementById("det-nta").textContent = props.precinct != null
+    ? `${placeSub(props)} · NYPD precinct, every record counted`
+    : `${placeSub(props)} · City Planning code ${props.geoid}`;
   const groups = {};
   VARS.forEach(v => { (groups[v.group] = groups[v.group] || []).push(v); });
   let html = "";
@@ -1659,14 +1678,13 @@ function applyCurrent() {
     document.getElementById("cur-desc").innerHTML = `<b>Across →</b> ${escapeHtml(mx.desc)}<br><b>Up ↑</b> ${escapeHtml(my.desc)}`;
     const sx = sourceOf(mx), sy = sourceOf(my);
     document.getElementById("cur-src").textContent = sx === sy ? `Source: ${sx}` : `Sources: across, ${sx}. Up, ${sy}`;
-    document.getElementById("biv-story").textContent = (currentStory && geoLevel === "tract")
-      ? currentStory + " (This note describes the neighborhood view; tracts are noisier.)" : currentStory ||
+    document.getElementById("biv-story").textContent = storyFor(xKey, yKey, currentStory) ||
       `Each color says where an area falls on both variables at once: its third (low, middle or high) on the horizontal measure and its third on the vertical one. The dark corner is high on both; the pale corner is low on both.`;
     renderBivLegend();
     renderScatter();
   }
   document.querySelector("#scatter-panel .sp-foot").textContent =
-    `Each dot is a ${geoLevel === "nta" ? "neighborhood" : "census tract"}. Hover a dot to find it on the map; hover the map to find it here.`;
+    `Each dot is a ${unitOne()}. Hover a dot to find it on the map; hover the map to find it here.`;
   renderCitySummary();
   if (geoLayer) geoLayer.setStyle(f => styleFor(f.properties));
   syncUrlHash();
@@ -1688,47 +1706,38 @@ document.querySelectorAll("#mode-toggle button").forEach(b => {
   b.addEventListener("click", () => setMode(b.dataset.mode));
 });
 
-// geography-toggle handler
-// The tract file is ~16 MB; the default neighborhood view doesn't need it, so it is
-// fetched the first time someone switches to tracts.
-let tractsPromise = null;
-function ensureTracts() {
-  if (GEO_TRACTS) return Promise.resolve(GEO_TRACTS);
-  if (!tractsPromise) {
-    const btn = document.querySelector('#geo-toggle button[data-geo="tract"]');
-    if (btn) btn.textContent = "Loading tracts…";
-    tractsPromise = fetch("tracts.geojson").then(r => {
-      if (!r.ok) throw new Error(`tracts.geojson: HTTP ${r.status}`);
-      return r.json();
-    }).then(g => { GEO_TRACTS = g; return g; })
-      .catch(e => { tractsPromise = null; throw e; })
-      .finally(() => { if (btn) btn.textContent = "Tract"; });
+// geography switch: precincts (default) or neighborhoods. The neighborhood file is
+// ~5 MB, so it is fetched the first time someone switches.
+let ntasPromise = null;
+function ensureNtas() {
+  if (GEO_NTAS) return Promise.resolve(GEO_NTAS);
+  if (!ntasPromise) {
+    const btn = document.querySelector('#geo-toggle button[data-geo="nta"]');
+    if (btn) btn.textContent = "Loading…";
+    ntasPromise = getJson("ntas.geojson").then(g => { GEO_NTAS = g; return g; })
+      .catch(e => { ntasPromise = null; throw e; })
+      .finally(() => { if (btn) btn.textContent = "Neighborhoods"; });
   }
-  return tractsPromise;
+  return ntasPromise;
+}
+function syncGeoUi() {
+  document.querySelectorAll("#geo-toggle button").forEach(b => b.classList.toggle("active", b.dataset.geo === geoLevel));
+  document.getElementById("geo-note").textContent = GEO_NOTES[geoLevel];
 }
 async function setGeoLevel(level) {
-  if (level !== "nta" && level !== "tract") return;
+  if (level !== "pct" && level !== "nta") return;
   if (level === geoLevel) return;
-  if (level === "tract") {
-    try { await ensureTracts(); }
-    catch (e) { console.error(e); alert("Couldn't load the tract map. Try again in a moment."); return; }
+  if (level === "nta") {
+    try { await ensureNtas(); }
+    catch (e) { console.error(e); alert("Couldn't load the neighborhood map. Try again in a moment."); return; }
   }
   geoLevel = level;
-  GEO = level === "nta" ? GEO_NTAS : GEO_TRACTS;
-  document.querySelectorAll("#geo-toggle button").forEach(b => {
-    b.classList.toggle("active", b.dataset.geo === level);
-  });
-  // Recompute scales / bins for the new geometry, redraw layer
+  GEO = level === "pct" ? GEO_PCT : GEO_NTAS;
+  syncGeoUi();
   currentScale = buildScale(metaOf(currentKey));
   rebuildBivBins();
-  if (geoLayer) {
-    map.removeLayer(geoLayer);
-    geoLayer = null;
-  }
-  if (selectedGeoid) {
-    selectedGeoid = null;
-    document.getElementById("detail-panel").classList.remove("open");
-  }
+  if (geoLayer) { map.removeLayer(geoLayer); geoLayer = null; }
+  if (selectedGeoid) { selectedGeoid = null; document.getElementById("detail-panel").classList.remove("open"); }
   attachGeoLayer();
   applyCurrent();
 }
@@ -1846,7 +1855,7 @@ function updateKbdHighlight() {
   });
 }
 
-function findTractAt(lon, lat) {
+function findAreaAt(lon, lat) {
   // Use d3.geoContains for robust point-in-polygon on GeoJSON
   for (const feat of GEO.features) {
     if (d3.geoContains(feat, [lon, lat])) return feat;
@@ -1870,8 +1879,8 @@ function selectSearchResult(i) {
     keyboard: false,
   }).addTo(map);
 
-  // Find the tract that contains this point and behave like a click
-  const tract = findTractAt(lon, lat);
+  // Find the neighborhood that contains this point and behave like a click
+  const tract = findAreaAt(lon, lat);
   map.flyTo([lat, lon], Math.max(map.getZoom(), 14), { duration: 0.8 });
   if (tract && geoLayer) {
     // Clear previous selection
@@ -2007,7 +2016,7 @@ function renderScatter() {
     dot.setAttribute("class", "sp-dot");
     dot.setAttribute("cx", xS(pt.x));
     dot.setAttribute("cy", yS(pt.y));
-    dot.setAttribute("r", geoLevel === "nta" ? 3.2 : 1.8);
+    dot.setAttribute("r", geoLevel === "pct" ? 4 : 3.2);
     dot.setAttribute("fill", c);
     dot.setAttribute("fill-opacity", "0.85");
     dot.dataset.geoid = pt.geoid;
@@ -2149,8 +2158,9 @@ async function applyUrlHash(hash) {
   const wasSuppressed = suppressHashApply;
   suppressHashApply = true;
   try {
-    const g = p.get("g");
-    if (g && g !== geoLevel) await setGeoLevel(g);
+    const g = p.get("g");   // "pct" or "nta"; older links may say "tract", now shown as neighborhoods
+    const want = g === "pct" ? "pct" : (g === "nta" || g === "tract") ? "nta" : null;
+    if (want && want !== geoLevel) await setGeoLevel(want);
     if (p.get("m") === "biv") {
       const x = p.get("x"), y = p.get("y");
       if (x && y && metaOf(x) && metaOf(y)) {
@@ -2186,7 +2196,7 @@ document.getElementById("export-csv").addEventListener("click", e => {
   // Always export geoid, borough, nta, plus the variable(s) currently in view (with MOE if present).
   // "_coded" marks a top- or bottom-coded median ("top" = at least this value);
   // non_residential marks parks, cemeteries, airports, bases and jails.
-  const cols = ["geoid", "borough", "nta", "non_residential"];
+  const cols = geoLevel === "pct" ? ["precinct", "name", "borough", "covers", "non_residential"] : ["geoid", "borough", "nta", "non_residential"];
   const withCompanions = k => [k, k + "_moe", k + "_coded"];
   if (mode === "single") cols.push(...withCompanions(currentKey));
   else cols.push(...withCompanions(xKey), ...withCompanions(yKey));
@@ -2205,7 +2215,7 @@ document.getElementById("export-csv").addEventListener("click", e => {
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const name = (mode === "single" ? currentKey : `${xKey}_x_${yKey}`) + `_${geoLevel}.csv`;
+  const name = (mode === "single" ? currentKey : `${xKey}_x_${yKey}`) + `_${unitWord()}.csv`;
   a.href = url; a.download = name;
   document.body.appendChild(a); a.click();
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
@@ -2242,11 +2252,12 @@ const getJson = url => fetch(url).then(r => { if (!r.ok) throw new Error(`${url}
 Promise.all([
   getJson("variables.json"),
   getJson("release.json").catch(() => ({})),
-  getJson("ntas.geojson"),
-]).then(async ([vars, release, ntasGeo]) => {
+  getJson("precincts.geojson"),
+]).then(async ([vars, release, pctGeo]) => {
   VARS = vars;
-  GEO_NTAS = ntasGeo;
-  GEO = GEO_NTAS;
+  GEO_PCT = pctGeo;
+  GEO = GEO_PCT;
+  syncGeoUi();
   RELEASE = release;
   try {
     if (release && release.crime_window) document.getElementById("crime-window-end").textContent = release.crime_window.end;

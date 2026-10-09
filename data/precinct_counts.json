@@ -1,0 +1,648 @@
+{
+ "meta": {
+  "weights": {
+   "blocks": 37984,
+   "residents_2020": 8804190,
+   "residents_nearest": 1760,
+   "tracts_split_under_95pct": 160,
+   "tracts": 2327
+  },
+  "arrests": {
+   "year": 2024,
+   "<18": 9450,
+   "18-24": 42026,
+   "no_valid_precinct": 0
+  },
+  "shootings": {
+   "window_start": "2023-07-01",
+   "window_end": "2026-06-30",
+   "suspect_incidents": 702,
+   "victims": 1125,
+   "no_valid_precinct": 0
+  },
+  "violent_victims": {
+   "window_start": "2025-07-01",
+   "window_end": "2026-06-30",
+   "records": 10058,
+   "historic_through": "2025-12-31",
+   "no_valid_precinct": 0
+  }
+ },
+ "precincts": {
+  "1": {
+   "arrests_u18": 66,
+   "arrests_18_24": 526,
+   "shoot_susp_u25": 2,
+   "shoot_vict_u25": 2,
+   "viol_vict_u18": 11,
+   "viol_vict_18_24": 46
+  },
+  "5": {
+   "arrests_u18": 78,
+   "arrests_18_24": 436,
+   "shoot_susp_u25": 4,
+   "shoot_vict_u25": 2,
+   "viol_vict_u18": 19,
+   "viol_vict_18_24": 49
+  },
+  "6": {
+   "arrests_u18": 48,
+   "arrests_18_24": 337,
+   "shoot_susp_u25": 1,
+   "shoot_vict_u25": 4,
+   "viol_vict_u18": 5,
+   "viol_vict_18_24": 40
+  },
+  "7": {
+   "arrests_u18": 77,
+   "arrests_18_24": 315,
+   "shoot_susp_u25": 8,
+   "shoot_vict_u25": 8,
+   "viol_vict_u18": 25,
+   "viol_vict_18_24": 49
+  },
+  "9": {
+   "arrests_u18": 57,
+   "arrests_18_24": 271,
+   "shoot_susp_u25": 2,
+   "shoot_vict_u25": 3,
+   "viol_vict_u18": 16,
+   "viol_vict_18_24": 33
+  },
+  "10": {
+   "arrests_u18": 76,
+   "arrests_18_24": 267,
+   "shoot_susp_u25": 2,
+   "shoot_vict_u25": 1,
+   "viol_vict_u18": 20,
+   "viol_vict_18_24": 27
+  },
+  "13": {
+   "arrests_u18": 217,
+   "arrests_18_24": 513,
+   "shoot_susp_u25": 2,
+   "shoot_vict_u25": 1,
+   "viol_vict_u18": 18,
+   "viol_vict_18_24": 50
+  },
+  "14": {
+   "arrests_u18": 267,
+   "arrests_18_24": 1486,
+   "shoot_susp_u25": 10,
+   "shoot_vict_u25": 8,
+   "viol_vict_u18": 34,
+   "viol_vict_18_24": 124
+  },
+  "17": {
+   "arrests_u18": 21,
+   "arrests_18_24": 165,
+   "viol_vict_u18": 7,
+   "viol_vict_18_24": 24
+  },
+  "18": {
+   "arrests_u18": 159,
+   "arrests_18_24": 911,
+   "shoot_susp_u25": 7,
+   "shoot_vict_u25": 3,
+   "viol_vict_u18": 27,
+   "viol_vict_18_24": 88
+  },
+  "19": {
+   "arrests_u18": 73,
+   "arrests_18_24": 283,
+   "shoot_susp_u25": 1,
+   "shoot_vict_u25": 3,
+   "viol_vict_u18": 16,
+   "viol_vict_18_24": 42
+  },
+  "20": {
+   "arrests_u18": 41,
+   "arrests_18_24": 113,
+   "shoot_susp_u25": 2,
+   "shoot_vict_u25": 5,
+   "viol_vict_u18": 17,
+   "viol_vict_18_24": 26
+  },
+  "22": {
+   "arrests_u18": 26,
+   "arrests_18_24": 19,
+   "viol_vict_u18": 1,
+   "viol_vict_18_24": 10
+  },
+  "23": {
+   "arrests_u18": 130,
+   "arrests_18_24": 433,
+   "shoot_susp_u25": 12,
+   "shoot_vict_u25": 24,
+   "viol_vict_u18": 66,
+   "viol_vict_18_24": 75
+  },
+  "24": {
+   "arrests_u18": 47,
+   "arrests_18_24": 196,
+   "shoot_susp_u25": 4,
+   "shoot_vict_u25": 4,
+   "viol_vict_u18": 15,
+   "viol_vict_18_24": 42
+  },
+  "25": {
+   "arrests_u18": 80,
+   "arrests_18_24": 488,
+   "shoot_susp_u25": 19,
+   "shoot_vict_u25": 11,
+   "viol_vict_u18": 28,
+   "viol_vict_18_24": 58
+  },
+  "26": {
+   "arrests_u18": 99,
+   "arrests_18_24": 271,
+   "shoot_susp_u25": 6,
+   "shoot_vict_u25": 6,
+   "viol_vict_u18": 22,
+   "viol_vict_18_24": 34
+  },
+  "28": {
+   "arrests_u18": 74,
+   "arrests_18_24": 338,
+   "shoot_susp_u25": 13,
+   "shoot_vict_u25": 16,
+   "viol_vict_u18": 31,
+   "viol_vict_18_24": 51
+  },
+  "30": {
+   "arrests_u18": 53,
+   "arrests_18_24": 259,
+   "shoot_susp_u25": 4,
+   "shoot_vict_u25": 2,
+   "viol_vict_u18": 18,
+   "viol_vict_18_24": 44
+  },
+  "32": {
+   "arrests_u18": 143,
+   "arrests_18_24": 428,
+   "shoot_susp_u25": 11,
+   "shoot_vict_u25": 27,
+   "viol_vict_u18": 49,
+   "viol_vict_18_24": 101
+  },
+  "33": {
+   "arrests_u18": 38,
+   "arrests_18_24": 373,
+   "shoot_susp_u25": 6,
+   "shoot_vict_u25": 4,
+   "viol_vict_u18": 23,
+   "viol_vict_18_24": 61
+  },
+  "34": {
+   "arrests_u18": 86,
+   "arrests_18_24": 699,
+   "shoot_susp_u25": 17,
+   "shoot_vict_u25": 10,
+   "viol_vict_u18": 29,
+   "viol_vict_18_24": 85
+  },
+  "40": {
+   "arrests_u18": 217,
+   "arrests_18_24": 1290,
+   "shoot_susp_u25": 38,
+   "shoot_vict_u25": 52,
+   "viol_vict_u18": 135,
+   "viol_vict_18_24": 240
+  },
+  "41": {
+   "arrests_u18": 168,
+   "arrests_18_24": 664,
+   "shoot_susp_u25": 11,
+   "shoot_vict_u25": 11,
+   "viol_vict_u18": 72,
+   "viol_vict_18_24": 152
+  },
+  "42": {
+   "arrests_u18": 176,
+   "arrests_18_24": 827,
+   "shoot_susp_u25": 34,
+   "shoot_vict_u25": 45,
+   "viol_vict_u18": 101,
+   "viol_vict_18_24": 144
+  },
+  "43": {
+   "arrests_u18": 268,
+   "arrests_18_24": 934,
+   "shoot_susp_u25": 26,
+   "shoot_vict_u25": 34,
+   "viol_vict_u18": 125,
+   "viol_vict_18_24": 180
+  },
+  "44": {
+   "arrests_u18": 266,
+   "arrests_18_24": 1374,
+   "shoot_susp_u25": 26,
+   "shoot_vict_u25": 53,
+   "viol_vict_u18": 156,
+   "viol_vict_18_24": 222
+  },
+  "45": {
+   "arrests_u18": 114,
+   "arrests_18_24": 552,
+   "shoot_susp_u25": 5,
+   "shoot_vict_u25": 14,
+   "viol_vict_u18": 55,
+   "viol_vict_18_24": 61
+  },
+  "46": {
+   "arrests_u18": 164,
+   "arrests_18_24": 1348,
+   "shoot_susp_u25": 36,
+   "shoot_vict_u25": 63,
+   "viol_vict_u18": 95,
+   "viol_vict_18_24": 196
+  },
+  "47": {
+   "arrests_u18": 216,
+   "arrests_18_24": 845,
+   "shoot_susp_u25": 26,
+   "shoot_vict_u25": 55,
+   "viol_vict_u18": 157,
+   "viol_vict_18_24": 203
+  },
+  "48": {
+   "arrests_u18": 198,
+   "arrests_18_24": 718,
+   "shoot_susp_u25": 24,
+   "shoot_vict_u25": 47,
+   "viol_vict_u18": 102,
+   "viol_vict_18_24": 149
+  },
+  "49": {
+   "arrests_u18": 163,
+   "arrests_18_24": 523,
+   "shoot_susp_u25": 7,
+   "shoot_vict_u25": 19,
+   "viol_vict_u18": 100,
+   "viol_vict_18_24": 128
+  },
+  "50": {
+   "arrests_u18": 55,
+   "arrests_18_24": 317,
+   "shoot_susp_u25": 5,
+   "shoot_vict_u25": 13,
+   "viol_vict_u18": 45,
+   "viol_vict_18_24": 40
+  },
+  "52": {
+   "arrests_u18": 147,
+   "arrests_18_24": 990,
+   "shoot_susp_u25": 22,
+   "shoot_vict_u25": 31,
+   "viol_vict_u18": 123,
+   "viol_vict_18_24": 204
+  },
+  "60": {
+   "arrests_u18": 173,
+   "arrests_18_24": 607,
+   "shoot_susp_u25": 11,
+   "shoot_vict_u25": 18,
+   "viol_vict_u18": 69,
+   "viol_vict_18_24": 85
+  },
+  "61": {
+   "arrests_u18": 121,
+   "arrests_18_24": 291,
+   "shoot_susp_u25": 5,
+   "shoot_vict_u25": 12,
+   "viol_vict_u18": 65,
+   "viol_vict_18_24": 51
+  },
+  "62": {
+   "arrests_u18": 111,
+   "arrests_18_24": 413,
+   "shoot_susp_u25": 2,
+   "shoot_vict_u25": 6,
+   "viol_vict_u18": 65,
+   "viol_vict_18_24": 59
+  },
+  "63": {
+   "arrests_u18": 116,
+   "arrests_18_24": 498,
+   "shoot_susp_u25": 1,
+   "shoot_vict_u25": 3,
+   "viol_vict_u18": 38,
+   "viol_vict_18_24": 36
+  },
+  "66": {
+   "arrests_u18": 49,
+   "arrests_18_24": 265,
+   "shoot_susp_u25": 1,
+   "shoot_vict_u25": 8,
+   "viol_vict_u18": 33,
+   "viol_vict_18_24": 47
+  },
+  "67": {
+   "arrests_u18": 219,
+   "arrests_18_24": 940,
+   "shoot_susp_u25": 19,
+   "shoot_vict_u25": 35,
+   "viol_vict_u18": 58,
+   "viol_vict_18_24": 132
+  },
+  "68": {
+   "arrests_u18": 73,
+   "arrests_18_24": 369,
+   "shoot_susp_u25": 1,
+   "viol_vict_u18": 28,
+   "viol_vict_18_24": 23
+  },
+  "69": {
+   "arrests_u18": 141,
+   "arrests_18_24": 385,
+   "shoot_susp_u25": 11,
+   "shoot_vict_u25": 22,
+   "viol_vict_u18": 27,
+   "viol_vict_18_24": 53
+  },
+  "70": {
+   "arrests_u18": 145,
+   "arrests_18_24": 656,
+   "shoot_susp_u25": 17,
+   "shoot_vict_u25": 15,
+   "viol_vict_u18": 49,
+   "viol_vict_18_24": 70
+  },
+  "71": {
+   "arrests_u18": 71,
+   "arrests_18_24": 368,
+   "shoot_susp_u25": 9,
+   "shoot_vict_u25": 20,
+   "viol_vict_u18": 37,
+   "viol_vict_18_24": 56
+  },
+  "72": {
+   "arrests_u18": 73,
+   "arrests_18_24": 460,
+   "shoot_susp_u25": 3,
+   "shoot_vict_u25": 4,
+   "viol_vict_u18": 37,
+   "viol_vict_18_24": 67
+  },
+  "73": {
+   "arrests_u18": 235,
+   "arrests_18_24": 882,
+   "shoot_susp_u25": 33,
+   "shoot_vict_u25": 55,
+   "viol_vict_u18": 106,
+   "viol_vict_18_24": 155
+  },
+  "75": {
+   "arrests_u18": 307,
+   "arrests_18_24": 1487,
+   "shoot_susp_u25": 27,
+   "shoot_vict_u25": 66,
+   "viol_vict_u18": 163,
+   "viol_vict_18_24": 220
+  },
+  "76": {
+   "arrests_u18": 85,
+   "arrests_18_24": 177,
+   "shoot_susp_u25": 5,
+   "shoot_vict_u25": 2,
+   "viol_vict_u18": 19,
+   "viol_vict_18_24": 21
+  },
+  "77": {
+   "arrests_u18": 108,
+   "arrests_18_24": 481,
+   "shoot_susp_u25": 11,
+   "shoot_vict_u25": 25,
+   "viol_vict_u18": 64,
+   "viol_vict_18_24": 104
+  },
+  "78": {
+   "arrests_u18": 80,
+   "arrests_18_24": 258,
+   "shoot_susp_u25": 3,
+   "shoot_vict_u25": 3,
+   "viol_vict_u18": 13,
+   "viol_vict_18_24": 27
+  },
+  "79": {
+   "arrests_u18": 164,
+   "arrests_18_24": 564,
+   "shoot_susp_u25": 9,
+   "shoot_vict_u25": 24,
+   "viol_vict_u18": 52,
+   "viol_vict_18_24": 87
+  },
+  "81": {
+   "arrests_u18": 117,
+   "arrests_18_24": 424,
+   "shoot_susp_u25": 12,
+   "shoot_vict_u25": 28,
+   "viol_vict_u18": 31,
+   "viol_vict_18_24": 59
+  },
+  "83": {
+   "arrests_u18": 151,
+   "arrests_18_24": 631,
+   "shoot_susp_u25": 8,
+   "shoot_vict_u25": 10,
+   "viol_vict_u18": 77,
+   "viol_vict_18_24": 97
+  },
+  "84": {
+   "arrests_u18": 121,
+   "arrests_18_24": 566,
+   "shoot_susp_u25": 2,
+   "shoot_vict_u25": 3,
+   "viol_vict_u18": 33,
+   "viol_vict_18_24": 79
+  },
+  "88": {
+   "arrests_u18": 47,
+   "arrests_18_24": 259,
+   "shoot_susp_u25": 7,
+   "shoot_vict_u25": 8,
+   "viol_vict_u18": 21,
+   "viol_vict_18_24": 36
+  },
+  "90": {
+   "arrests_u18": 86,
+   "arrests_18_24": 399,
+   "shoot_susp_u25": 9,
+   "shoot_vict_u25": 9,
+   "viol_vict_u18": 35,
+   "viol_vict_18_24": 78
+  },
+  "94": {
+   "arrests_u18": 30,
+   "arrests_18_24": 180,
+   "shoot_susp_u25": 2,
+   "shoot_vict_u25": 8,
+   "viol_vict_u18": 12,
+   "viol_vict_18_24": 20
+  },
+  "100": {
+   "arrests_u18": 89,
+   "arrests_18_24": 157,
+   "shoot_susp_u25": 1,
+   "shoot_vict_u25": 4,
+   "viol_vict_u18": 19,
+   "viol_vict_18_24": 13
+  },
+  "101": {
+   "arrests_u18": 115,
+   "arrests_18_24": 359,
+   "shoot_susp_u25": 13,
+   "shoot_vict_u25": 18,
+   "viol_vict_u18": 58,
+   "viol_vict_18_24": 68
+  },
+  "102": {
+   "arrests_u18": 94,
+   "arrests_18_24": 470,
+   "shoot_susp_u25": 6,
+   "shoot_vict_u25": 6,
+   "viol_vict_u18": 39,
+   "viol_vict_18_24": 80
+  },
+  "103": {
+   "arrests_u18": 204,
+   "arrests_18_24": 949,
+   "shoot_susp_u25": 13,
+   "shoot_vict_u25": 30,
+   "viol_vict_u18": 106,
+   "viol_vict_18_24": 157
+  },
+  "104": {
+   "arrests_u18": 62,
+   "arrests_18_24": 387,
+   "shoot_susp_u25": 3,
+   "shoot_vict_u25": 8,
+   "viol_vict_u18": 74,
+   "viol_vict_18_24": 72
+  },
+  "105": {
+   "arrests_u18": 153,
+   "arrests_18_24": 681,
+   "shoot_susp_u25": 9,
+   "shoot_vict_u25": 15,
+   "viol_vict_u18": 33,
+   "viol_vict_18_24": 35
+  },
+  "106": {
+   "arrests_u18": 128,
+   "arrests_18_24": 406,
+   "shoot_susp_u25": 4,
+   "shoot_vict_u25": 6,
+   "viol_vict_u18": 47,
+   "viol_vict_18_24": 79
+  },
+  "107": {
+   "arrests_u18": 146,
+   "arrests_18_24": 422,
+   "shoot_susp_u25": 7,
+   "shoot_vict_u25": 5,
+   "viol_vict_u18": 47,
+   "viol_vict_18_24": 52
+  },
+  "108": {
+   "arrests_u18": 93,
+   "arrests_18_24": 369,
+   "shoot_susp_u25": 1,
+   "shoot_vict_u25": 1,
+   "viol_vict_u18": 41,
+   "viol_vict_18_24": 69
+  },
+  "109": {
+   "arrests_u18": 210,
+   "arrests_18_24": 829,
+   "shoot_susp_u25": 2,
+   "shoot_vict_u25": 2,
+   "viol_vict_u18": 68,
+   "viol_vict_18_24": 57
+  },
+  "110": {
+   "arrests_u18": 317,
+   "arrests_18_24": 1247,
+   "shoot_susp_u25": 4,
+   "shoot_vict_u25": 13,
+   "viol_vict_u18": 101,
+   "viol_vict_18_24": 175
+  },
+  "111": {
+   "arrests_u18": 42,
+   "arrests_18_24": 177,
+   "shoot_susp_u25": 2,
+   "shoot_vict_u25": 2,
+   "viol_vict_u18": 16,
+   "viol_vict_18_24": 18
+  },
+  "112": {
+   "arrests_u18": 48,
+   "arrests_18_24": 288,
+   "shoot_vict_u25": 1,
+   "viol_vict_u18": 23,
+   "viol_vict_18_24": 27
+  },
+  "113": {
+   "arrests_u18": 134,
+   "arrests_18_24": 781,
+   "shoot_susp_u25": 10,
+   "shoot_vict_u25": 10,
+   "viol_vict_u18": 58,
+   "viol_vict_18_24": 71
+  },
+  "114": {
+   "arrests_u18": 173,
+   "arrests_18_24": 655,
+   "shoot_susp_u25": 4,
+   "shoot_vict_u25": 11,
+   "viol_vict_u18": 45,
+   "viol_vict_18_24": 95
+  },
+  "115": {
+   "arrests_u18": 124,
+   "arrests_18_24": 971,
+   "shoot_susp_u25": 5,
+   "shoot_vict_u25": 3,
+   "viol_vict_u18": 72,
+   "viol_vict_18_24": 128
+  },
+  "116": {
+   "arrests_u18": 1,
+   "arrests_18_24": 30,
+   "shoot_susp_u25": 1,
+   "shoot_vict_u25": 4,
+   "viol_vict_u18": 20,
+   "viol_vict_18_24": 50
+  },
+  "120": {
+   "arrests_u18": 225,
+   "arrests_18_24": 855,
+   "shoot_susp_u25": 15,
+   "shoot_vict_u25": 17,
+   "viol_vict_u18": 63,
+   "viol_vict_18_24": 75
+  },
+  "121": {
+   "arrests_u18": 86,
+   "arrests_18_24": 528,
+   "shoot_susp_u25": 1,
+   "shoot_vict_u25": 3,
+   "viol_vict_u18": 37,
+   "viol_vict_18_24": 57
+  },
+  "122": {
+   "arrests_u18": 39,
+   "arrests_18_24": 236,
+   "shoot_vict_u25": 1,
+   "viol_vict_u18": 17,
+   "viol_vict_18_24": 28
+  },
+  "123": {
+   "arrests_u18": 36,
+   "arrests_18_24": 160,
+   "viol_vict_u18": 16,
+   "viol_vict_18_24": 17
+  }
+ }
+}

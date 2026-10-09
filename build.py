@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
-"""Build NYC population map data.
+"""Build the summer jobs factor map's data.
 
 Fetches latest ACS 5-year data from the Census Reporter API
 (https://api.censusreporter.org) — no API key required.
-Joins with NYC tract geometry and outputs:
-  docs/tracts.geojson  — one feature per NYC tract with all metrics baked in
-  docs/ntas.geojson    — the same metrics re-derived for NYC DCP's 262 NTAs
-  docs/variables.json  — metric metadata for the UI
+Works tract by tract (the units Census and NYPD data arrive in), then sums the
+tracts into NYC City Planning's 262 neighborhoods (NTAs), which are the only
+geography the map shows (since Oct. 9, 2026: neighborhood estimates carry far
+smaller margins of error). Outputs:
+  docs/ntas.geojson    — the young-people measures for every neighborhood
+  docs/variables.json  — metadata for the 25 measures the map offers
   docs/release.json    — name/year of the ACS release used
+
+The script still derives the population explorer's other measures internally
+(they share Census tables and denominators with the youth measures), but only
+the young-people, need, arrests, violence and sites-within-a-mile measures are
+written out.
 
 Raw Census Reporter responses are cached in cache/ (not committed) so repeat
 builds are fast and reproducible. Pass --refresh to re-download them.
@@ -1097,11 +1104,145 @@ for nf in nta_base["features"]:
 
 print(f"Wrote {len(nta_features)} NTAs.")
 
+# ---------- Precinct aggregation (added Oct. 9, 2026) ----------
+# The precinct view counts every NYPD record by the precinct NYPD assigned it, so the
+# station-house records left out of the neighborhood view are included. Census cells,
+# which come by tract, are split along precinct lines by each tract's 2020 census-block
+# residents (fetch_precincts.py); 93% of tracts have at least 95% of their residents in
+# one precinct. MOEs of the split cells are approximated as sqrt(sum((w * moe)^2)),
+# treating each tract's share as a fixed fraction of its estimate.
+print("Aggregating to precincts...")
+_pw_path, _pc_path, _pg_path = ROOT / "data" / "tract_precinct_weights.json", ROOT / "data" / "precinct_counts.json", ROOT / "data" / "precincts.geojson"
+for _p in (_pw_path, _pc_path, _pg_path):
+    if not _p.exists():
+        raise SystemExit(f"{_p.name} missing -- run fetch_precincts.py first")
+tract_w = json.load(open(_pw_path))
+pct_counts = json.load(open(_pc_path))
+pct_geo = json.load(open(_pg_path))
+missing_w = [g for g in all_data if g not in tract_w]
+if missing_w:
+    raise SystemExit(f"{len(missing_w)} tracts have no precinct weights, e.g. {missing_w[:3]}")
+pct_members = {}
+for g, ws in tract_w.items():
+    if g not in all_data:
+        continue
+    for p, wt in ws.items():
+        pct_members.setdefault(int(p), []).append((g, wt))
+
+def wagg_cells(members, source):
+    out = {}
+    for g, wt in members:
+        for k, v in source.get(g, {}).items():
+            if v is None or not isinstance(v, (int, float)):
+                continue
+            out[k] = out.get(k, 0) + wt * v
+    return out
+
+def wagg_moe_cells(members, source):
+    out = {}
+    for g, wt in members:
+        for k, v in source.get(g, {}).items():
+            if v is None or not isinstance(v, (int, float)):
+                continue
+            out[k] = out.get(k, 0) + (wt * v) ** 2
+    return {k: _math.sqrt(v) for k, v in out.items()}
+
+PCT_NAMES = {14: "Midtown South", 18: "Midtown North", 22: "Central Park"}
+BORO_OF_COUNTY = {"36005": "Bronx", "36047": "Brooklyn", "36061": "Manhattan", "36081": "Queens", "36085": "Staten Island"}
+NTA_NAME = {f["properties"]["nta2020"]: f["properties"].get("ntaname") for f in nta_base["features"]}
+def ordinal(n):
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+try:
+    from pyproj import Transformer
+    _to_sp = Transformer.from_crs("EPSG:4326", "EPSG:2263", always_xy=True)
+except ImportError:
+    raise SystemExit("pyproj is needed for precinct land areas (pip install pyproj)")
+from shapely.geometry import shape as _shape, mapping as _mapping
+from shapely.ops import transform as _transform
+
+pct_features = []
+for pf in pct_geo["features"]:
+    pnum = pf["properties"]["precinct"]
+    members = pct_members.get(pnum, [])
+    if not members:
+        raise SystemExit(f"precinct {pnum} has no tracts")
+    agg_d = wagg_cells(members, all_data)
+    agg_m = wagg_moe_cells(members, all_moes)
+    rec, moes = derive_one(agg_d, agg_m)
+    for key, moe_val in moes.items():
+        if moe_val is None: continue
+        if moe_val >= 1000: rec[key + '_moe'] = round(moe_val)
+        elif moe_val >= 10: rec[key + '_moe'] = round(moe_val, 1)
+        else: rec[key + '_moe'] = round(moe_val, 2)
+    # Every NYPD record, by its own precinct field (nothing left out).
+    c = pct_counts["precincts"].get(str(pnum), {})
+    for k in ("arrests_u18", "arrests_18_24", "shoot_susp_u25", "shoot_vict_u25", "viol_vict_u18", "viol_vict_18_24"):
+        rec[k] = c.get(k, 0)
+    rec["syep_age_2020"] = sum(wt * (derived.get(g, {}).get("syep_age_2020") or 0) for g, wt in members)
+    w_sum = w_tot = 0.0
+    for g, wt in members:
+        t = derived.get(g, {})
+        if t.get("syep_sites_1mi") is not None and t.get("pop_16_24"):
+            w_sum += wt * t["syep_sites_1mi"] * t["pop_16_24"]
+            w_tot += wt * t["pop_16_24"]
+    rec["syep_sites_1mi"] = (w_sum / w_tot) if w_tot else None
+    youth_rates(rec, SHOOT_YEARS)
+    # Located major felonies (station-house complaints excluded) only feed the
+    # daytime-crowd caveat flag, as in the neighborhood view.
+    ct = sum(wt * (derived.get(g, {}).get("crime_total") or 0) for g, wt in members)
+    pop = rec.get("pop_total")
+    rec["non_residential"] = not pop or pop < 2000
+    if pop and pop >= 2000 and 1000.0 * ct / pop > 100:
+        rec["crime_commercial_daytime"] = True
+    geom = _shape(pf["geometry"]).buffer(0)
+    sqmi = _transform(_to_sp.transform, geom).area / 27_878_400.0
+    rec["pop_density"] = (pop / sqmi) if (pop and sqmi > 0) else None
+    rec["youth_density"] = (rec["pop_16_24"] / sqmi) if (rec.get("pop_16_24") and sqmi > 0) else None
+    rec["land_sqmi"] = round(sqmi, 4)
+    # Labels: the borough and neighborhoods holding most of the precinct's residents.
+    by_boro, by_nta = {}, {}
+    for g, wt in members:
+        tp = (all_data.get(g, {}).get("B01003001") or 0) * wt
+        by_boro[BORO_OF_COUNTY[g[:5]]] = by_boro.get(BORO_OF_COUNTY[g[:5]], 0) + tp
+        n = tract_to_nta.get(g)
+        if n:
+            by_nta[n] = by_nta.get(n, 0) + tp
+    tot = sum(by_nta.values()) or 1
+    covers = [NTA_NAME.get(n) for n, v in sorted(by_nta.items(), key=lambda kv: -kv[1]) if v / tot >= 0.10][:4]
+    rec["geoid"] = f"pct{pnum}"
+    rec["precinct"] = pnum
+    rec["name"] = f"{ordinal(pnum)} Precinct" + (f" ({PCT_NAMES[pnum]})" if pnum in PCT_NAMES else "")
+    rec["borough"] = max(by_boro, key=by_boro.get) if by_boro else None
+    rec["covers"] = "; ".join(x for x in covers if x)
+    rec["tract_count"] = len(members)
+    # Display geometry: simplified ~5 m, 5-decimal coordinates (the counts above use none of it).
+    gm = _mapping(geom.simplify(0.00005, preserve_topology=True))
+    def _r(cs):
+        return [round(cs[0], 5), round(cs[1], 5)] if isinstance(cs[0], (int, float)) else [_r(x) for x in cs]
+    gm["coordinates"] = _r(gm["coordinates"])
+    pct_features.append({"type": "Feature", "geometry": gm, "properties": rec})
+
+# Reconcile: precinct sums equal the city totals.
+for k in ("arrests_u18", "arrests_18_24", "shoot_susp_u25", "shoot_vict_u25"):
+    want = {"arrests_u18": pct_counts["meta"]["arrests"]["<18"], "arrests_18_24": pct_counts["meta"]["arrests"]["18-24"],
+            "shoot_susp_u25": pct_counts["meta"]["shootings"]["suspect_incidents"],
+            "shoot_vict_u25": pct_counts["meta"]["shootings"]["victims"]}[k]
+    got = sum(f["properties"][k] for f in pct_features)
+    if got != want:
+        raise SystemExit(f"precinct sum of {k} is {got}, expected {want}")
+city_pop = sum(all_data[g].get("B01003001") or 0 for g in all_data)
+pct_pop = sum(f["properties"].get("pop_total") or 0 for f in pct_features)
+if abs(pct_pop - city_pop) > 1:
+    raise SystemExit(f"precinct residents {pct_pop:,.0f} != tract residents {city_pop:,.0f}")
+print(f"Wrote {len(pct_features)} precincts; residents {pct_pop:,.0f} (tracts {city_pop:,.0f}); "
+      f"non-residential: {[f['properties']['precinct'] for f in pct_features if f['properties']['non_residential']]}")
+
 # Strip internal raw-count fields (prefixed with _) from BOTH outputs to save file size.
 # Must run AFTER the NTA aggregation block above, which reads from derived[geoid] — the
 # tract feature properties share the same dict reference as derived[geoid], so stripping
 # tracts too early was zeroing out the NTA-level Decennial percentages.
-for f in nta_features:
+for f in nta_features + pct_features:
     for k in list(f["properties"].keys()):
         if k.startswith("_"):
             del f["properties"][k]
@@ -1142,33 +1283,33 @@ VARS = [
      "Share of residents 18 to 24 whose schooling stopped short of a high school diploma or equivalency (ACS B15001). Includes some 18-year-olds still in high school."),
 
     ("Young people: arrests, 2024", "arrests_u25_rate", "Arrests under 25, per 1,000 residents 10 to 24", "num1", "per 1,000 residents 10–24",
-     "NYPD arrests of people 24 and younger in 2024 (the under-18 and 18-to-24 groups combined) per 1,000 residents aged 10 to 24. NYPD records age only in bands, so 24 and younger is the closest cut to \"under 24\". Counted where the arrest was made; the quarter of arrests NYPD logged at a precinct station house are left out. See the under-18 count for the caveats. Not shown where fewer than 100 residents are 10 to 24."),
+     "NYPD arrests of people 24 and younger in 2024 (the under-18 and 18-to-24 groups combined) per 1,000 residents aged 10 to 24. NYPD records age only in bands, so 24 and younger is the closest cut to \"under 24\". Counted where the arrest was made. The precinct view counts every arrest; the neighborhood view leaves out the quarter NYPD logged at a precinct station house. See the under-18 count for the caveats. Not shown where fewer than 100 residents are 10 to 24."),
     ("Young people: arrests, 2024", "arrests_u25", "Arrests under 25 (count)", "int", "arrests",
      "NYPD arrests of people 24 and younger in calendar 2024, in NYPD's own patrol, transit and housing jurisdictions: the under-18 and 18-to-24 counts added together, with the same placement rules and caveats."),
     ("Young people: arrests, 2024", "arrests_u18_rate", "Arrests under 18, per 1,000 residents 10 to 17", "num1", "per 1,000 residents 10–17",
      "NYPD arrests of people under 18 in 2024 per 1,000 residents aged 10 to 17. The arrest is counted where it was made and the residents where they live, so places that draw young people from elsewhere, such as shopping strips and transit hubs, run high. Not shown where fewer than 100 residents are 10 to 17. See the count for the caveats on 2024 and on station-house arrests."),
     ("Young people: arrests, 2024", "arrests_u18", "Arrests under 18 (count)", "int", "arrests",
-     "NYPD arrests of people under 18 in calendar 2024, in NYPD's own patrol, transit and housing jurisdictions, placed where the arrest was made. 2024 is the latest full year in which NYPD's file records an age for nearly every arrest; the 2025 file has no age on 53% of arrests. NYPD logged a third of 2024 under-18 arrests at the precinct station house because it had no street location for them (footnote 6 of NYPD's arrest data). Those are left out, so counts understate, by more in precincts that log more arrests that way (from 15% to 44% of youth arrests, depending on the precinct). An arrest whose street point sits on a boundary is split equally between the areas that meet there. Arrests reflect police activity as well as offending, and where someone is arrested is not where they live."),
+     "NYPD arrests of people under 18 in calendar 2024, in NYPD's own patrol, transit and housing jurisdictions, placed where the arrest was made. 2024 is the latest full year in which NYPD's file records an age for nearly every arrest; the 2025 file has no age on 53% of arrests. NYPD logged a third of 2024 under-18 arrests at the precinct station house because it had no street location for them (footnote 6 of NYPD's arrest data). The precinct view counts them, by the precinct NYPD assigned. The neighborhood view leaves them out, so its counts understate, by more in precincts that log more arrests that way (from 15% to 44% of youth arrests), and splits an arrest whose street point sits on a boundary equally between the areas that meet there. Arrests reflect police activity as well as offending, and where someone is arrested is not where they live."),
     ("Young people: arrests, 2024", "arrests_18_24_rate", "Arrests ages 18 to 24, per 1,000 residents 18 to 24", "num1", "per 1,000 residents 18–24",
      "NYPD arrests of people aged 18 to 24 in 2024 per 1,000 residents aged 18 to 24. Same caveats as the under-18 rate. Not shown where fewer than 100 residents are 18 to 24."),
     ("Young people: arrests, 2024", "arrests_18_24", "Arrests ages 18 to 24 (count)", "int", "arrests",
-     "NYPD arrests of people aged 18 to 24 in calendar 2024, placed where the arrest was made. Arrests NYPD logged at a precinct station house (23% of this age group) are left out, as described for the under-18 count."),
+     "NYPD arrests of people aged 18 to 24 in calendar 2024, placed where the arrest was made. Arrests NYPD logged at a precinct station house (23% of this age group) count in the precinct view and are left out of the neighborhood view, as described for the under-18 count."),
 
     ("Young people: violence", "shoot_vict_u25_rate", "Shooting victims under 25, per 10,000 residents under 25 a year", "num2", "per 10,000 residents under 25, a year",
      "People under 25 shot in the area, July 2023 through June 2026, as a yearly average per 10,000 residents under 25 (NYPD shooting victims). Counted where the shooting happened, not where the victim lived."),
     ("Young people: violence", "shoot_vict_u25", "Shooting victims under 25 (count, 3 years)", "int", "people",
-     "People under 25 shot from July 2023 through June 2026, placed where the shooting happened (NYPD shooting incidents and victims). NYPD logs about one in eight of these shootings at the precinct station house, without a street location; those are left out."),
+     "People under 25 shot from July 2023 through June 2026, placed where the shooting happened (NYPD shooting incidents and victims). NYPD logs about one in eight of these shootings at the precinct station house, without a street location; the precinct view counts them and the neighborhood view leaves them out."),
     ("Young people: violence", "shoot_susp_u25_rate", "Shootings with a suspect under 25, per 10,000 residents a year", "num2", "per 10,000 residents, a year",
      "Shooting incidents with at least one suspect under 25, July 2023 through June 2026, as a yearly average per 10,000 residents. NYPD lists no suspect for about two in five shootings, so this undercounts."),
     ("Young people: violence", "shoot_susp_u25", "Shootings with a suspect under 25 (count, 3 years)", "int", "shootings",
-     "Shooting incidents from July 2023 through June 2026 in which NYPD lists at least one suspect under 25, placed where the shooting happened; the one in nine that NYPD logged at the precinct station house, without a street location, are left out. A suspect is someone NYPD identified or described, not necessarily someone arrested or convicted."),
+     "Shooting incidents from July 2023 through June 2026 in which NYPD lists at least one suspect under 25, placed where the shooting happened; the one in nine that NYPD logged at the precinct station house, without a street location, count in the precinct view and are left out of the neighborhood view. A suspect is someone NYPD identified or described, not necessarily someone arrested or convicted."),
     ("Young people: violence", "viol_vict_u25_rate", "Violent crimes against people under 25, per 1,000 residents under 25", "num1", "per 1,000 residents under 25",
      "Murders, robberies and felony assaults with a victim under 25, July 2025 through June 2026, per 1,000 residents under 25. Counted where the crime happened. See the count for what is included."),
     ("Young people: violence", "viol_vict_u25", "Violent crimes against people under 25 (count)", "int", "complaints",
-     "Murders, robberies and felony assaults reported to NYPD from July 2025 through June 2026 in which the victim was under 25, by report date. Rape is left out because NYPD records nearly every rape complaint at the precinct station house to protect victims. About 5% of these complaints carry no victim age and are not counted. The 2% that NYPD logged at the precinct station house, without a street location, are left out."),
+     "Murders, robberies and felony assaults reported to NYPD from July 2025 through June 2026 in which the victim was under 25, by report date. Rape is left out because NYPD records nearly every rape complaint at the precinct station house to protect victims. About 5% of these complaints carry no victim age and are not counted. The 2% that NYPD logged at the precinct station house, without a street location, count in the precinct view and are left out of the neighborhood view."),
 
     ("Summer jobs (SYEP)", "syep_sites_1mi", "Summer jobs sites within a mile", "num1", "sites",
-     "Summer Youth Employment Program sites within one mile. For a tract, measured from its Census internal point, a point inside the tract near its middle; for a neighborhood, averaged across its tracts weighted by residents 16 to 24, so it reflects what a typical young resident has nearby. Sites are summer 2025 locations from the Department of Youth and Community Development (DYCD)."),
+     "Summer Youth Employment Program sites within one mile of where the area's young people live: counted from each census tract's internal point (a point inside the tract near its middle), then averaged across the area's tracts weighted by residents 16 to 24, so it reflects what a typical young resident has nearby. Sites are summer 2025 locations from the Department of Youth and Community Development (DYCD): where provider organizations enroll and serve participants, one entry per location, year-round programs excluded."),
     ("Summer jobs (SYEP)", "syep_sites_in", "Summer jobs sites located here (count)", "int", "sites",
      "Summer Youth Employment Program sites located in the area in summer 2025, from DYCD's program-site list for fiscal 2026. These are where provider organizations enroll and serve participants, not the employer worksites where participants are placed, which DYCD does not publish. One entry per location; year-round programs excluded."),
 
@@ -1373,9 +1514,14 @@ def source_for(group, key):
         return "2020 Decennial Census (DHC, via IPUMS NHGIS)"
     return "ACS 2020–24 5-year"
 
+# The map offers only the young-people measures and sites within a mile (Josh,
+# Oct. 9, 2026); the population explorer's other measures are not written out.
+MAP_GROUPS = {"Young people", "Young people: need", "Young people: arrests, 2024", "Young people: violence"}
+MAP_KEYS = {"syep_sites_1mi"}
+MAP_VARS = [v for v in VARS if v[0] in MAP_GROUPS or v[1] in MAP_KEYS]
 vars_meta = [
     {"group": g, "key": k, "label": l, "fmt": f, "units": u, "desc": desc, "source": source_for(g, k)}
-    for (g, k, l, f, u, desc) in VARS
+    for (g, k, l, f, u, desc) in MAP_VARS
 ]
 json.dump(vars_meta, open(DOCS / "variables.json", "w"))
 print(f"Wrote {DOCS/'variables.json'}  ({len(vars_meta)} variables)")
@@ -1389,7 +1535,7 @@ print(f"Wrote {DOCS/'variables.json'}  ({len(vars_meta)} variables)")
 COUNT_KEYS = {k for (g, k, l, f, u, desc) in VARS if f == "int"}
 RATE_KEYS = {k for (g, k, l, f, u, desc) in VARS if f != "int"}
 nonres_cleared = 0
-for f in features + nta_features:
+for f in features + nta_features + pct_features:
     props = f["properties"]
     if not props.get("non_residential"):
         continue
@@ -1401,13 +1547,30 @@ for f in features + nta_features:
     props.pop("crime_commercial_daytime", None)
 print(f"Cleared shares/medians/rates for {nonres_cleared} non-residential tracts + NTAs.")
 
+# Keep only what the page reads: the map's measures (with their margins of error and
+# top/bottom-coding flags), names, the non-residential flag, total residents (quoted in
+# the non-residential note) and the daytime-crowd flag behind the arrest-rate caveat.
+KEEP_PROPS = {"geoid", "borough", "nta", "nta_tract_count", "non_residential", "pop_total",
+              "crime_commercial_daytime", "precinct", "name", "covers", "tract_count"}
+for (g, k, l, fm, u, desc) in MAP_VARS:
+    KEEP_PROPS.update({k, k + "_moe", k + "_coded"})
+for f in nta_features + pct_features:
+    f["properties"] = {k: v for k, v in f["properties"].items() if k in KEEP_PROPS}
+for label, feats in (("neighborhood", nta_features), ("precinct", pct_features)):
+    missing = [k for (g, k, l, fm, u, desc) in MAP_VARS
+               if not any(f["properties"].get(k) is not None for f in feats)]
+    if missing:
+        raise SystemExit(f"measures with no values in any {label}: {missing}")
+json.dump({"type": "FeatureCollection", "features": pct_features}, open(DOCS / "precincts.geojson", "w"))
+print(f"Wrote {DOCS/'precincts.geojson'}  ({(DOCS/'precincts.geojson').stat().st_size/1_000_000:.2f} MB)")
+
 nta_out = {"type": "FeatureCollection", "features": nta_features}
 json.dump(nta_out, open(DOCS / "ntas.geojson", "w"))
 print(f"Wrote {DOCS/'ntas.geojson'}  ({(DOCS/'ntas.geojson').stat().st_size/1_000_000:.2f} MB)")
-
-out_geo = {"type": "FeatureCollection", "features": features}
-json.dump(out_geo, open(DOCS / "tracts.geojson", "w"))
-print(f"Wrote {DOCS/'tracts.geojson'}  ({(DOCS/'tracts.geojson').stat().st_size/1_000_000:.2f} MB)")
+stale = DOCS / "tracts.geojson"
+if stale.exists():  # the map no longer offers a tract view
+    stale.unlink()
+    print("Removed docs/tracts.geojson")
 
 # release info — include crime window when present
 release_blob = dict(release_meta or {})

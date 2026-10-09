@@ -61,3 +61,59 @@ for x, y, cell, kind, boros in WORDING:
     tot = sum(cnt.values())
     ok = (cnt.most_common(1)[0][0] == boros[0]) if kind == "led" else (sum(cnt[b] for b in boros) > tot / 2)
     print(("ok   " if ok else "FAIL ") + f"{x} x {y} {cell} {kind} {boros}: {dict(cnt)}")
+
+# ---- Precinct stories (storyPct), added Oct. 9, 2026 ----
+# These name whole cells, so each check asserts the exact set of precincts in the cell,
+# the borough counts the story gives and the correlation it quotes.
+PF = [f["properties"] for f in json.load(open("docs/precincts.geojson"))["features"]]
+def pcells(x, y):
+    P = [p for p in PF if p.get(x) is not None and p.get(y) is not None]
+    xs, ys = sorted(p[x] for p in P), sorted(p[y] for p in P)
+    x1, x2, y1, y2 = q(xs, 1/3), q(xs, 2/3), q(ys, 1/3), q(ys, 2/3)
+    b = lambda v, a, c: 0 if v <= a else 1 if v <= c else 2
+    return {p["precinct"]: (b(p[x], x1, x2), b(p[y], y1, y2)) for p in P}
+def pcorr(x, y):
+    P = [p for p in PF if p.get(x) is not None and p.get(y) is not None]
+    a, c = [p[x] for p in P], [p[y] for p in P]
+    ma, mc = sum(a) / len(a), sum(c) / len(c)
+    return sum((u - ma) * (v - mc) for u, v in zip(a, c)) / math.sqrt(sum((u - ma) ** 2 for u in a) * sum((v - mc) ** 2 for v in c))
+PB = {p["precinct"]: p["borough"] for p in PF}
+S = "syep_sites_1mi"
+PCT_CLAIMS = [  # (x, y, cell, exact precincts or None, borough counts or None)
+    (S, "pov_rate_16_24", UL, {66}, None),
+    (S, "pov_rate_16_24", UR, None, {"Manhattan": 9, "Bronx": 7, "Brooklyn": 3}),
+    (S, "neet_16_19", UL, {47, 68, 103, 115}, None),
+    (S, "neet_16_19", UR, None, {"Bronx": 6, "Manhattan": 5}),
+    (S, "shoot_vict_u25_rate", UL, {47, 60, 103}, None),
+    (S, "shoot_vict_u25_rate", UR, None, {"Bronx": 6}),
+    (S, "viol_vict_u25_rate", UL, {47, 60, 103}, None),
+    (S, "viol_vict_u25_rate", UR, None, {"Bronx": 7, "Manhattan": 6}),
+    (S, "pop_16_24", UL, {102, 106, 107, 109, 115, 62, 66, 121, 122, 47}, None),
+    ("unemp_16_24", "shoot_vict_u25_rate", UR, None, {"Bronx": 6, "Manhattan": 4, "Brooklyn": 4, "Queens": 2}),
+    ("unemp_16_24", "shoot_vict_u25_rate", LR, {62, 63, 106}, None),
+    ("pov_rate_u18", "arrests_u18_rate", (0, 2), {6, 13, 14, 18, 28, 76, 84}, None),
+    ("pov_rate_u18", "arrests_u18_rate", LR, {33, 66, 90}, None),
+]
+pbad = 0
+for x, y, cell, exact, boros in PCT_CLAIMS:
+    c = pcells(x, y)
+    members = {p for p, v in c.items() if v == cell}
+    if exact is not None and members != exact:
+        print(f"PRECINCT CELL {x} x {y} {cell}: data {sorted(members)}, story {sorted(exact)}"); pbad += 1
+    if boros is not None:
+        cnt = Counter(PB[p] for p in members)
+        for b, n in boros.items():
+            if cnt[b] != n:
+                print(f"PRECINCT BOROUGHS {x} x {y} {cell}: {b} {cnt[b]}, story {n}"); pbad += 1
+        top = cnt.most_common(1)[0][0]
+        if top != next(iter(boros)):
+            print(f"PRECINCT 'led by' {x} x {y}: largest is {top}"); pbad += 1
+    # 26th and 9th sit with the high-poverty, many-sites precincts
+for p in (26, 9):
+    if pcells(S, "pov_rate_16_24")[p] != UR:
+        print(f"PRECINCT {p} not upper-right for youth poverty x sites"); pbad += 1
+for x, y, r in ((S, "pov_rate_16_24", 0.69), (S, "neet_16_19", 0.30), (S, "shoot_vict_u25_rate", 0.44),
+                ("unemp_16_24", "shoot_vict_u25_rate", 0.50), ("pov_rate_u18", "arrests_u18_rate", -0.11)):
+    if round(pcorr(x, y), 2) != r:
+        print(f"PRECINCT correlation {x} x {y}: {pcorr(x, y):.3f}, story {r}"); pbad += 1
+print("precinct preset claims OK" if not pbad else f"{pbad} precinct problems")
